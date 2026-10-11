@@ -113,4 +113,19 @@ describe("shared headless export", () => {
     expect(await readProjectFile(result.paths.project)).toEqual(project);
     expect((await readFile(result.paths.stl)).readUInt32LE(80)).toBe(result.triangles);
   }, 20_000);
+
+  it("inherits the body color for text when the saved rim color region is disabled", async () => {
+    const directory = await temporaryDirectory();
+    const project = projectDocSchema.parse({ schemaVersion: PROJECT_SCHEMA_VERSION,
+      spec: parseBinSpec({ gridX: 1, gridY: 1, heightUnits: 4, fill: "solid", textColor: null,
+        surfaceTexts: [{ id: "inherited-label", text: "A", position: { x: 0, y: 0 }, sizeMm: 4 }] }),
+      shapes: [], cutouts: [], fingerHoles: [], materials: { ...DEFAULT_BIN_MATERIALS,
+        binColor: "#ffffff", stackingRimColor: "#000000", colorPocketFloors: false, colorStackingRim: false } });
+    const result = await exportProject(project, directory, "body-colored-text");
+    const model = strFromU8(unzipSync(await readFile(result.paths.threeMf))["3D/3dmodel.model"]);
+    expect(model.includes('name="A"')).toBe(true);
+    const colors = Array.from(model.matchAll(/<m:color color="(#[^"]+)"\/>/g), match => match[1]);
+    expect(colors).toEqual(["#FFFFFFFF"]);
+    expect(await readProjectFile(result.paths.project)).toEqual(project);
+  }, 20_000);
 });

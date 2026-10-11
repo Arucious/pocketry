@@ -120,6 +120,7 @@ export async function exportProject(
   try {
     const kernel: Kernel = { CrossSection: wasm.CrossSection, Manifold: wasm.Manifold, triangulate: wasm.triangulate, arena };
     const materials = project.materials;
+    const edgeBandColor = materials?.colorStackingRim ? materials.stackingRimColor : materials?.binColor;
     const built = buildBinWithCutouts(kernel, project.spec, {
       shapesById, cutouts: project.cutouts, fingerHoles: project.fingerHoles,
     }, EXPORT_QUALITY, {
@@ -148,7 +149,7 @@ export async function exportProject(
       addPart("Bin body", built.bodySolid, materials?.binColor);
     }
     for (const part of built.textParts) {
-      addPart(part.label.name ?? part.label.text, part.solid, project.spec.textColor ?? materials?.stackingRimColor);
+      addPart(part.label.name ?? part.label.text, part.solid, project.spec.textColor ?? edgeBandColor);
     }
     const threeMf = writeThreeMf(objects, { title: project.name ?? name, assemble: objects.length > 1 });
     const stl = new Uint8Array(writeBinarySTL(mesh));

@@ -39,6 +39,8 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
   let fillProvided = false;
   let lipProvided = false;
   const seen = new Set<string>();
+  const legacyDuplicates = new Set<string>();
+  const legacyRepeatable = new Set(["--fill", "--no-lip", "--out"]);
   const numberValue = (raw: string, flag: string) => {
     const value = Number(raw);
     if (!raw.trim() || !Number.isFinite(value)) throw new Error(`${flag} requires a finite number.`);
@@ -52,7 +54,10 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
       return next;
     };
     if (arg.startsWith("--") && arg !== "--finger-center") {
-      if (seen.has(arg)) throw new Error(`Duplicate argument: ${arg}`);
+      if (seen.has(arg)) {
+        if (!legacyRepeatable.has(arg)) throw new Error(`Duplicate argument: ${arg}`);
+        legacyDuplicates.add(arg);
+      }
       seen.add(arg);
     }
     if (arg === "--svg") options.svgPath = value();
@@ -94,7 +99,7 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
       if (key === "objectDepthMm") depthProvided = true;
       svgOnly.add(arg);
     } else if (/^\d+x\d+x\d+(?:\.5)?$/i.test(arg)) {
-      if (fixedDimensions) throw new Error("Supply dimensions only once.");
+      if (fixedDimensions) legacyDuplicates.add("dimensions");
       const [gridX, gridY, heightUnits] = arg.toLowerCase().split("x").map(Number);
       Object.assign(options.spec, { gridX, gridY, heightUnits });
       Object.assign(options.svgOptions, { gridX, gridY, heightUnits });
@@ -102,6 +107,11 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
     } else throw new Error(`Unknown argument: ${arg}`);
   }
   if (options.svgPath && options.projectPath) throw new Error("Choose either --svg or --project.");
+  // Original empty-bin commands use the last supplied legacy option. Preserve
+  // that contract while keeping the new SVG/project modes unambiguous.
+  if ((options.svgPath || options.projectPath) && legacyDuplicates.size) {
+    throw new Error(`Duplicate argument: ${[...legacyDuplicates].join(", ")}`);
+  }
   if (!options.svgPath && svgOnly.size) throw new Error("SVG options require --svg.");
   if (options.svgPath && !depthProvided) throw new Error("--svg requires --object-depth in millimetres.");
   if (options.svgPath && fillProvided && options.spec.fill !== "solid") throw new Error("SVG pockets require solid fill.");

@@ -1,0 +1,102 @@
+{
+  "upstreamCommit": "8146b250206b5411327f32adecbbe0d0c2bc05a9",
+  "manifoldVersion": "3.5.1",
+  "quality": {
+    "circularSegments": 64,
+    "fingerHoleChordToleranceMm": 0.01,
+    "cutoutVertexBudget": 600,
+    "filletProfileStepMm": 0.1
+  },
+  "fixtures": [
+    {
+      "case": "default",
+      "input": {
+        "gridX": 2,
+        "gridY": 3,
+        "heightUnits": 6,
+        "fill": "none",
+        "lip": "standard"
+      },
+      "filename": "bin-2x3x6",
+      "triangles": 8064,
+      "volumeMm3": 82412.51227803952,
+      "stlPayloadSha256": "03daf5d2d49d4bae2299dab31ce06c508467701b334aff9f5e9397b195635888",
+      "threeMfMeshSha256": "1208d5365cf39d7ccb82e11ed92c9c8a693b550660907ba9595edaba09e64ac0"
+    },
+    {
+      "case": "small",
+      "input": {
+        "gridX": 1,
+        "gridY": 1,
+        "heightUnits": 2,
+        "fill": "none",
+        "lip": "standard"
+      },
+      "filename": "bin-1x1x2",
+      "triangles": 5230,
+      "volumeMm3": 13250.146552761766,
+      "stlPayloadSha256": "d67c9572cf341408de9e53bb9d6c223dba1c5fa636498f1fb02c5ed30b974ad4",
+      "threeMfMeshSha256": "07f479822420ae05178dd1684dd5c52d9b3c562d9023006713fb0dc569f0ba7a"
+    },
+    {
+      "case": "long",
+      "input": {
+        "gridX": 4,
+        "gridY": 1,
+        "heightUnits": 6,
+        "fill": "none",
+        "lip": "standard"
+      },
+      "filename": "bin-4x1x6",
+      "triangles": 6932,
+      "volumeMm3": 60745.587171871724,
+      "stlPayloadSha256": "ca5f54506abdef8335b01e94180bb89afd5f5d30ea8cd62047e39b6e03379d41",
+      "threeMfMeshSha256": "05159e012657f473966c0baad97b9f7c481383e490473ae5fc626118f317aa70"
+    },
+    {
+      "case": "solid",
+      "input": {
+        "gridX": 2,
+        "gridY": 3,
+        "heightUnits": 6,
+        "fill": "solid",
+        "lip": "standard"
+      },
+      "filename": "bin-2x3x6-solid",
+      "triangles": 7726,
+      "volumeMm3": 422361.4633781755,
+      "stlPayloadSha256": "2e1c7d75a4e17193e8379b69fcfdc2b3d114e03410336c82fb2cd16e0f0f914d",
+      "threeMfMeshSha256": "29c3dcff4a247de1e19135a1a8a63102529763563f9d015c74185c3b52a12ac8"
+    },
+    {
+      "case": "solid-no-lip",
+      "input": {
+        "gridX": 4,
+        "gridY": 2,
+        "heightUnits": 3,
+        "fill": "solid",
+        "lip": "none"
+      },
+      "filename": "bin-4x2x3-solid-nolip",
+      "triangles": 5102,
+      "volumeMm3": 281994.9507628639,
+      "stlPayloadSha256": "ae933d07bdcb3143fe7526514bc96298aea6ec0eee878758d6389117cf4d117c",
+      "threeMfMeshSha256": "37fc5bd3a133ed3da7965562c6db36268e589262a12031ff74f210c76713a379"
+    },
+    {
+      "case": "empty-no-lip",
+      "input": {
+        "gridX": 2,
+        "gridY": 1,
+        "heightUnits": 3,
+        "fill": "none",
+        "lip": "none"
+      },
+      "filename": "bin-2x1x3-nolip",
+      "triangles": 1688,
+      "volumeMm3": 24772.87746913899,
+      "stlPayloadSha256": "96060b61494f14378be72318c319a8a90db1d9a46d4c3d05a950967c069c0b55",
+      "threeMfMeshSha256": "5dc656193be8e84b308872fececee226921e70f956bb02daf1defc1ac9cb34fe"
+    }
+  ]
+}

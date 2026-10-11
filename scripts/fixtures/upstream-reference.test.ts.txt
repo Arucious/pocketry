@@ -1,0 +1,58 @@
+// Copy this adapter into a clean upstream checkout as described in the
+// compatibility document. Production geometry and serializers stay untouched.
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { strFromU8, unzipSync } from "fflate";
+import { expect, it } from "vitest";
+import { parseBinSpec, type BinSpecInput } from "../../../../shared/gridfinity/types";
+import { writeBinarySTL } from "../export/stl-writer";
+import { Arena } from "../manifold/arena";
+import { createKernel, loadManifold } from "../manifold/runtime";
+import { extractPrintableMeshData } from "../mesh/mesh-data";
+import { writeThreeMf } from "../mesh/threemf";
+import { buildBin, EXPORT_QUALITY } from "./bin";
+
+it("records the upstream geometry without altering production source", async () => {
+  const inputs = process.env.POCKETRY_REFERENCE_INPUTS;
+  const output = process.env.POCKETRY_REFERENCE_DIR;
+  const commit = process.env.POCKETRY_REFERENCE_COMMIT;
+  if (!inputs || !output || !commit) throw new Error("Set the three POCKETRY_REFERENCE variables.");
+  const fixtures: { case: string; input: BinSpecInput }[] = JSON.parse(readFileSync(inputs, "utf8")).fixtures;
+  const metadata = JSON.parse(readFileSync("node_modules/manifold-3d/package.json", "utf8"));
+  const wasm = await loadManifold();
+  const records = [];
+  for (const fixture of fixtures) {
+    const arena = new Arena();
+    try {
+      const kernel = createKernel(wasm, arena);
+      const spec = parseBinSpec(fixture.input);
+      const { solid } = buildBin(kernel, spec, EXPORT_QUALITY);
+      const mesh = extractPrintableMeshData(kernel, solid);
+      const label = `${spec.gridX}x${spec.gridY}x${spec.heightUnits}`
+        + (spec.fill === "solid" ? "-solid" : "") + (spec.lip === "none" ? "-nolip" : "");
+      const directory = join(output, fixture.case);
+      mkdirSync(directory, { recursive: true });
+      const stl = Buffer.from(writeBinarySTL(mesh, `ToolTrace Gridfinity bin ${label}`));
+      const threeMf = writeThreeMf([{ name: `Gridfinity bin ${label}`, mesh }], {
+        title: `ToolTrace Gridfinity bin ${label}`,
+      });
+      writeFileSync(join(directory, `bin-${label}.stl`), stl);
+      writeFileSync(join(directory, `bin-${label}.3mf`), threeMf);
+      const model = strFromU8(unzipSync(threeMf)["3D/3dmodel.model"]);
+      const meshes = model.match(/<mesh>[\s\S]*?<\/mesh>/g);
+      expect(meshes).toHaveLength(1);
+      records.push({ ...fixture, filename: `bin-${label}`, triangles: mesh.indices.length / 3,
+        volumeMm3: solid.volume(),
+        stlPayloadSha256: createHash("sha256").update(stl.subarray(80)).digest("hex"),
+        threeMfMeshSha256: createHash("sha256").update(meshes![0]).digest("hex") });
+    } finally {
+      arena.dispose();
+    }
+  }
+  mkdirSync(output, { recursive: true });
+  writeFileSync(join(output, "reference.json"), JSON.stringify({
+    upstreamCommit: commit, manifoldVersion: metadata.version,
+    quality: EXPORT_QUALITY, fixtures: records,
+  }, null, 2) + "\n");
+}, 30_000);

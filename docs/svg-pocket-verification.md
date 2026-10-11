@@ -47,3 +47,5 @@ physical fit, finger comfort or print quality for a particular printer.
 
 See [SVG pockets and local automation](svg-pockets-and-mcp.md) for options and
 MCP client configuration.
+See [upstream compatibility validation](upstream-compatibility.md) for the
+subsequent baseline comparison, permanent legacy-export regressions and limits.
