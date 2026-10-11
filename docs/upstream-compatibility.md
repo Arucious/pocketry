@@ -11,7 +11,7 @@ Both checkouts used their own committed lockfile and a clean `npm ci`.
 | Gate | Unmodified upstream | Fork with regression additions |
 | --- | --- | --- |
 | TypeScript | Passed | Passed |
-| Full suite | 173 files / 3,023 tests passed | 180 files / 3,136 tests passed |
+| Full suite | 173 files / 3,023 tests passed | 181 files / 3,171 tests passed |
 | Production build | Passed | Passed |
 | Production server | Starts and serves HTML, JavaScript and WASM | Same |
 | Existing image API | Seven representative responses | Matches after normalizing allocated IDs |
@@ -79,8 +79,89 @@ the STL watertight, winding-consistent and connected, with positive volume,
 material solids were watertight with consistent winding and positive volume;
 the archive uses millimetres. No application console errors were observed.
 Files, mesh evidence and a screenshot remain local under
-`exports/compatibility/`. Raster calibration/tracing and other platforms were
-not exercised in this browser session.
+`exports/compatibility/`. That initial Chrome session did not exercise raster
+calibration/tracing. The additional checks below cover the original photo
+workflow and Firefox.
+
+## Additional production-browser checks
+
+The original photo workflow was exercised in the in-app browser against
+an isolated production origin. The committed Wiha 50 mm photographic RGBA
+fixture was losslessly encoded as PNG; no object-specific code or new image
+dependency was needed. Upload, manual ruler confirmation, region selection,
+automatic contour detection, 0.5 mm margin, 10 mm fixed pocket depth and
+transfer into Bin all passed. Transfer resized the bin to 1 × 3 × 6 units.
+Undo restored the previous empty 2 × 2 bin; redo restored the pocket and its
+resized bin. Library save and reload preserved the result.
+
+The 100 mm ruler span was an explicit test input, not a physical measurement of
+this screwdriver. The resulting scale was 0.3171475824 mm/px; the transferred
+outline measured 14.1805 × 97.1305 mm. The saved SVG and project agreed on scale,
+centering and the conversion from image Y-down to model Y-up within 0.005 mm,
+including the 47 margin-offset vertices. This checks data consistency rather
+than physical fit accuracy.
+
+A separate original photographed reference-strip fixture exercised automatic
+calibration in the production UI. Its marker pair was detected, geometry
+handoff stayed disabled pending review, and accepting the detected scale
+produced `Strip · 1.236 mm/px` in the 450 × 600 working image. This agrees with
+the original approximately 0.632 mm/px fixture scale after resizing its
+880 × 1174 source. No application console warnings or errors were observed in
+either in-app browser session.
+
+Firefox 156.0.1 on macOS also passed the original Bessey sample import, 4.5 → 5
+unit height edit, undo/redo, Library save/reload, WebGL preview and completed
+STL, multicolor 3MF and editable-project downloads. Native photo selection and
+upload worked. Manual ruler placement, detection and raster-to-bin transfer
+were not completed in Firefox because the automation's native canvas coordinate
+mapping was unreliable; those actions are not claimed as Firefox coverage.
+
+Actual downloaded artifacts were checked independently with trimesh. Both STLs
+were watertight, winding-consistent, connected and had positive volume:
+
+| Browser export | Triangles | Dimensions (mm) | Model volume (mm³) |
+| --- | --- | --- | --- |
+| Raster workflow | 35,266 | 41.5 × 125.5 × 45.5515 | 205,795.35 |
+| Firefox sample | 62,038 | 62.5 × 125.5 × 38.5515 | 161,612.61 |
+
+All three material solids in each 3MF were also watertight, winding-consistent
+and positive-volume; archives use millimetres and material-part volume sums
+match their STLs within 0.1 mm³. Each downloaded browser backup was then exported
+through the new saved-project CLI. For both projects, browser and headless STL
+payloads matched byte-for-byte after the 80-byte header, and every 3MF mesh XML
+block matched exactly. Object names and archive metadata can still differ.
+Screenshots, downloaded files, headless re-exports and independent mesh evidence
+remain ignored/local under `exports/compatibility/`.
+
+These browser checks were all on macOS. No accessible disposable Linux guest or
+container runtime was available; UTM is installed, but a guest was not started.
+Linux/Windows coverage is still outstanding. No hosted CI was enabled or run.
+
+## Saved-project and library schema comparisons
+
+A second clean archive of the same upstream commit used its original lockfile
+and Zod 3.23.8. A generic adapter exercised that checkout and the fork with Zod
+3.25.76 against 35 cases: all 16 standalone bundled samples, two historical
+project fixtures, all 16 projects in the sample library, and its library backup
+envelope. Project input versions 9, 16, 19, 24, 31, 32, 35 and 36 were covered,
+as well as library version 1.
+
+Every case passed migration/schema validation, deterministic repeated parsing,
+serialization and reparse checks. All parsed and serialized hashes, and all full
+normalized snapshots, matched between upstream and fork. Canonicalization only
+sorts JSON object keys and applies normal JSON omission of undefined object
+fields; arrays, IDs and every serialized value remain intact. The library
+comparison additionally preserves project ordering and the complete envelope.
+No schema output drift was found in this corpus.
+
+The upstream-generated hashes are committed in
+`shared/gridfinity/fixtures/upstream-sample-migrations.json`; the permanent
+`shared/gridfinity/upstream-sample-migrations.test.ts` adds 35 regression cases.
+It checks original source hashes before comparing migrations and portable
+serialization against these references. The adapter in
+`scripts/fixtures/upstream-migration-reference.test.ts.txt` reproduces evidence
+without changing upstream production code. Full snapshots and lockfile/runtime
+provenance remain local under `exports/compatibility/sample-migrations/`.
 
 ## Reproducing the references
 
@@ -106,6 +187,15 @@ cp -f "$taskForkDir/scripts/fixtures/upstream-reference.test.ts.txt" \
 )
 diff -u scripts/fixtures/upstream-empty-bins.json exports/compatibility/reproduced/reference.json
 npm test -- --maxWorkers=2 scripts/lib/legacy-export.test.ts
+cp -f "$taskForkDir/scripts/fixtures/upstream-migration-reference.test.ts.txt" \
+  "$taskBaselineDir/shared/gridfinity/upstream-migration-reference.test.ts"
+(
+  cd "$taskBaselineDir"
+  POCKETRY_MIGRATION_REPORT_DIR="$taskForkDir/exports/compatibility/reproduced-migrations" \
+  POCKETRY_MIGRATION_GOLDENS="$taskForkDir/shared/gridfinity/fixtures/upstream-sample-migrations.json" \
+  npm test -- --maxWorkers=1 shared/gridfinity/upstream-migration-reference.test.ts
+)
+npm test -- --maxWorkers=2 shared/gridfinity/upstream-sample-migrations.test.ts
 ```
 
 The adapter only adds a temporary test to the extracted snapshot. Its regenerated
@@ -127,6 +217,15 @@ bytes, about 31 KB. SVG parsing is eagerly imported by the new dialog. The
 existing large-chunk build advisory appears in both versions; this measurement
 does not establish startup latency on a slow device.
 
+Dependency review confirmed that React 18.3.1, Vite 5.4.21, Three 0.180.0,
+fflate 0.8.3, the application server's Express 4.21.2 and Manifold 3.5.1 remain
+unchanged. The main shared changes are Zod 3.23.8 → 3.25.76 and fast-xml-parser
+5.10.1 → 5.11.2; the latter also changes Manifold's existing transitive XML
+parser. The MCP SDK has a nested Express 5 dependency, while the application
+server still resolves Express 4. Shared proxy-addr moves from 2.0.7 to 2.0.8.
+Original geometry, migration and font-source tests passed with these changes;
+no concrete incompatibility was found in the exercised paths.
+
 The new headless project reader's documented 10 MB cap can reject a portable-font
 project that the original browser accepts. Projects without saved appearance
 export as a single uncolored 3MF through the headless wrapper; explicit saved
@@ -135,7 +234,8 @@ to original browser import/export behavior. Nozzle fit and physical printing
 are outside this compatibility check.
 
 Before an upstream submission, repeat validation if upstream advances, check
-the original raster-to-bin workflow and another platform/browser, and review
-the dependency and startup-size tradeoffs. Omit the fork-specific commit-author
-policy change from an upstream PR. These results provide regression evidence;
+Linux/Windows portability and the Firefox raster-to-bin workflow. Review
+startup latency on a slow device alongside the dependency and bundle-size
+tradeoffs. Omit the fork-specific commit-author policy change from an upstream
+PR. These results provide regression evidence;
 they cannot prove the absence of every possible bug.

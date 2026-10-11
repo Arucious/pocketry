@@ -1,0 +1,373 @@
+{
+  "upstreamCommit": "8146b250206b5411327f32adecbbe0d0c2bc05a9",
+  "canonicalization": "sorted-object-keys-arrays-and-ids-preserved",
+  "cases": [
+    {
+      "case": "samples/bessey-gerber/bessey-gerber.pocketry.json",
+      "sourceFile": "samples/bessey-gerber/bessey-gerber.pocketry.json",
+      "sourceSha256": "b94c75f249eb33d22e56b37a9eead03caeb9f4e609d5d46090d1365b8d254433",
+      "kind": "project",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "e97bd8046315944f4032640b27c18963b11df417b124762fa0753659ad7e45b4",
+      "serializedSha256": "e97bd8046315944f4032640b27c18963b11df417b124762fa0753659ad7e45b4"
+    },
+    {
+      "case": "samples/bessey-gerber/bessey-utility-knife.pocketry.json",
+      "sourceFile": "samples/bessey-gerber/bessey-utility-knife.pocketry.json",
+      "sourceSha256": "3d91e5d9fcc5bfb4cfe7a0bd5639bee15bf2c5497c94d29a1c015da6f3b9ffed",
+      "kind": "project",
+      "inputSchemaVersion": 35,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "efc447812ca4ec0ab0e324b6b18a8994085122f694139dcb0349f7a9713ab925",
+      "serializedSha256": "efc447812ca4ec0ab0e324b6b18a8994085122f694139dcb0349f7a9713ab925"
+    },
+    {
+      "case": "samples/bessey-gerber/gerber-multitool.pocketry.json",
+      "sourceFile": "samples/bessey-gerber/gerber-multitool.pocketry.json",
+      "sourceSha256": "4bbfa3f77c4adfbd149df44563c235293698fabc838c8ec589b72d2b9533270b",
+      "kind": "project",
+      "inputSchemaVersion": 35,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "5ead69bc8fdadec75b43e93eb90fd6cbf47135ccc0a50cc070b42a3ceba480a6",
+      "serializedSha256": "5ead69bc8fdadec75b43e93eb90fd6cbf47135ccc0a50cc070b42a3ceba480a6"
+    },
+    {
+      "case": "samples/caliper-storage/caliper-storage.pocketry.json",
+      "sourceFile": "samples/caliper-storage/caliper-storage.pocketry.json",
+      "sourceSha256": "e5a570a11eb324577d68ff649362e28e80d1e1565fdccbf456ed4076f7fbbd4f",
+      "kind": "project",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "6d80d09b248ad4a7d7d2f791133b95e491fa3da5b46062ec851033632ce05f1c",
+      "serializedSha256": "6d80d09b248ad4a7d7d2f791133b95e491fa3da5b46062ec851033632ce05f1c"
+    },
+    {
+      "case": "samples/dewalt-right-angle-tools/dewalt-right-angle-tools.pocketry.json",
+      "sourceFile": "samples/dewalt-right-angle-tools/dewalt-right-angle-tools.pocketry.json",
+      "sourceSha256": "870c2903891ca4d7cb5d1e091b5cdad0daff9aea6c273822c7b44f2b9c2f1097",
+      "kind": "project",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "54b6f6da346f5bc11f8c3631262ee99d1827cc2021364e36ffb50857b68f2e14",
+      "serializedSha256": "54b6f6da346f5bc11f8c3631262ee99d1827cc2021364e36ffb50857b68f2e14"
+    },
+    {
+      "case": "samples/klein-voltage-tester/klein-voltage-tester.pocketry.json",
+      "sourceFile": "samples/klein-voltage-tester/klein-voltage-tester.pocketry.json",
+      "sourceSha256": "aa72cdc0e9e79d089df34374ed15abc353069d1a026befa854fbb1a36f0ca3ac",
+      "kind": "project",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "392f7463a416786397f9f8aa54aa96c4d85a6cfe4904a18e3b96f146b5909d88",
+      "serializedSha256": "392f7463a416786397f9f8aa54aa96c4d85a6cfe4904a18e3b96f146b5909d88"
+    },
+    {
+      "case": "samples/mini-socket-set/mini-socket-set.pocketry.json",
+      "sourceFile": "samples/mini-socket-set/mini-socket-set.pocketry.json",
+      "sourceSha256": "4d2c9feb2b3952ccc46d7c6e31350ddbd7e89983332147c44b700b1d2d8a59fa",
+      "kind": "project",
+      "inputSchemaVersion": 24,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "3f21094af6872811b92853f0ddbe721427235418dc6bec19d908bde9fca9f1b6",
+      "serializedSha256": "3f21094af6872811b92853f0ddbe721427235418dc6bec19d908bde9fca9f1b6"
+    },
+    {
+      "case": "samples/mouldline-remover/mouldline-remover.pocketry.json",
+      "sourceFile": "samples/mouldline-remover/mouldline-remover.pocketry.json",
+      "sourceSha256": "045af0bc28f20a3e56bc76f6f84f9a5be620bd3c248ecfe9946b3cf8dfda7b15",
+      "kind": "project",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "2750110c3f18365107c06ed3c9d64c76bbe770972e70f56d009152730dd96b32",
+      "serializedSha256": "2750110c3f18365107c06ed3c9d64c76bbe770972e70f56d009152730dd96b32"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library",
+      "inputSchemaVersion": 1,
+      "outputSchemaVersion": 1,
+      "parsedSha256": "869ab7503f0a5ff4ae2c336faa992aa2f32fd676afe33cc731f7ac640bf86530",
+      "serializedSha256": "cc2bbd32075b5df2d8c11f123a8bd9aff5ab16e28f04ea0ec8a8d8e41ab44362",
+      "migratedSha256": "cc2bbd32075b5df2d8c11f123a8bd9aff5ab16e28f04ea0ec8a8d8e41ab44362"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-bessey-gerber",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-bessey-gerber",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "e97bd8046315944f4032640b27c18963b11df417b124762fa0753659ad7e45b4",
+      "serializedSha256": "e97bd8046315944f4032640b27c18963b11df417b124762fa0753659ad7e45b4"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-bessey-utility-knife",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-bessey-utility-knife",
+      "inputSchemaVersion": 35,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "efc447812ca4ec0ab0e324b6b18a8994085122f694139dcb0349f7a9713ab925",
+      "serializedSha256": "efc447812ca4ec0ab0e324b6b18a8994085122f694139dcb0349f7a9713ab925"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-caliper-storage",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-caliper-storage",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "6d80d09b248ad4a7d7d2f791133b95e491fa3da5b46062ec851033632ce05f1c",
+      "serializedSha256": "6d80d09b248ad4a7d7d2f791133b95e491fa3da5b46062ec851033632ce05f1c"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-dewalt-right-angle-tools",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-dewalt-right-angle-tools",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "54b6f6da346f5bc11f8c3631262ee99d1827cc2021364e36ffb50857b68f2e14",
+      "serializedSha256": "54b6f6da346f5bc11f8c3631262ee99d1827cc2021364e36ffb50857b68f2e14"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-gerber-multitool",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-gerber-multitool",
+      "inputSchemaVersion": 35,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "5ead69bc8fdadec75b43e93eb90fd6cbf47135ccc0a50cc070b42a3ceba480a6",
+      "serializedSha256": "5ead69bc8fdadec75b43e93eb90fd6cbf47135ccc0a50cc070b42a3ceba480a6"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-klein-voltage-tester",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-klein-voltage-tester",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "392f7463a416786397f9f8aa54aa96c4d85a6cfe4904a18e3b96f146b5909d88",
+      "serializedSha256": "392f7463a416786397f9f8aa54aa96c4d85a6cfe4904a18e3b96f146b5909d88"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-mini-socket-set",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-mini-socket-set",
+      "inputSchemaVersion": 24,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "3f21094af6872811b92853f0ddbe721427235418dc6bec19d908bde9fca9f1b6",
+      "serializedSha256": "3f21094af6872811b92853f0ddbe721427235418dc6bec19d908bde9fca9f1b6"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-mouldline-remover",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-mouldline-remover",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "2750110c3f18365107c06ed3c9d64c76bbe770972e70f56d009152730dd96b32",
+      "serializedSha256": "2750110c3f18365107c06ed3c9d64c76bbe770972e70f56d009152730dd96b32"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-ryobi-cutter",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-ryobi-cutter",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "682f2ae4f0c357314826d95e0b87797b43e3f78ec08e607ce4ad25bd5b2ac658",
+      "serializedSha256": "682f2ae4f0c357314826d95e0b87797b43e3f78ec08e607ce4ad25bd5b2ac658"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-stapler",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-stapler",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "92ebfd39e627c05279b792a97e31477c6a4c53f92bf22515ff40f05fa0ba98f9",
+      "serializedSha256": "92ebfd39e627c05279b792a97e31477c6a4c53f92bf22515ff40f05fa0ba98f9"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-wiha-40mm-drivers",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-wiha-40mm-drivers",
+      "inputSchemaVersion": 31,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "ac5eb07658d15d1d78d0732827fb191efc5db84a2dbfb23a2f2d4dbca7cf15a8",
+      "serializedSha256": "ac5eb07658d15d1d78d0732827fb191efc5db84a2dbfb23a2f2d4dbca7cf15a8"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-wiha-50mm-drivers",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-wiha-50mm-drivers",
+      "inputSchemaVersion": 31,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "aff33bce0e152877cb3d9545dbec0c18665cdb7aa364892449e12e4868e4538e",
+      "serializedSha256": "aff33bce0e152877cb3d9545dbec0c18665cdb7aa364892449e12e4868e4538e"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-wiha-60mm-drivers",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-wiha-60mm-drivers",
+      "inputSchemaVersion": 32,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "3546ce038f548bf5188be11b7eb1b15290e63429078299c2b847209e80e9882e",
+      "serializedSha256": "3546ce038f548bf5188be11b7eb1b15290e63429078299c2b847209e80e9882e"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-wiha-drivers",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-wiha-drivers",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "bd1b30a610cb92a02020b79c0784a0c2d8f04075e7daa98ef9e70f2fcca4cdb9",
+      "serializedSha256": "bd1b30a610cb92a02020b79c0784a0c2d8f04075e7daa98ef9e70f2fcca4cdb9"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-wire-strippers",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-wire-strippers",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "8d5e8077593afccf8ee67010d40f4e266787e95fd1d3d3daae6f4abc8b0634fc",
+      "serializedSha256": "8d5e8077593afccf8ee67010d40f4e266787e95fd1d3d3daae6f4abc8b0634fc"
+    },
+    {
+      "case": "samples/pocketry-sample-library.json#pocketry-sample-wolfbox-mf70-airduster-kit",
+      "sourceFile": "samples/pocketry-sample-library.json",
+      "sourceSha256": "a3d5103471418648af1c10c42d6483af876eed0976df145ca8701b62629c0f7e",
+      "kind": "library-project",
+      "libraryProjectId": "pocketry-sample-wolfbox-mf70-airduster-kit",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "16797ae9fa188de2dcf11b4b079637c20bc5092060122cedceae005f2ae841da",
+      "serializedSha256": "16797ae9fa188de2dcf11b4b079637c20bc5092060122cedceae005f2ae841da"
+    },
+    {
+      "case": "samples/ryobi-cutter/ryobi-cutter.pocketry.json",
+      "sourceFile": "samples/ryobi-cutter/ryobi-cutter.pocketry.json",
+      "sourceSha256": "60add2c4964e05a872dc011495c74f5e471324f9e50dcbd484d0d67663728c10",
+      "kind": "project",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "682f2ae4f0c357314826d95e0b87797b43e3f78ec08e607ce4ad25bd5b2ac658",
+      "serializedSha256": "682f2ae4f0c357314826d95e0b87797b43e3f78ec08e607ce4ad25bd5b2ac658"
+    },
+    {
+      "case": "samples/stapler/stapler.pocketry.json",
+      "sourceFile": "samples/stapler/stapler.pocketry.json",
+      "sourceSha256": "edcf8ccdeb33c35eccb88f4ff163c3b194a5aa81c1848b1b48365be3bd4fa735",
+      "kind": "project",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "92ebfd39e627c05279b792a97e31477c6a4c53f92bf22515ff40f05fa0ba98f9",
+      "serializedSha256": "92ebfd39e627c05279b792a97e31477c6a4c53f92bf22515ff40f05fa0ba98f9"
+    },
+    {
+      "case": "samples/wiha-40mm-drivers/wiha-40mm-drivers.pocketry.json",
+      "sourceFile": "samples/wiha-40mm-drivers/wiha-40mm-drivers.pocketry.json",
+      "sourceSha256": "980d74628713890bda76116947a2e19809dca6acaedc423f3c46103de8b35fad",
+      "kind": "project",
+      "inputSchemaVersion": 31,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "ac5eb07658d15d1d78d0732827fb191efc5db84a2dbfb23a2f2d4dbca7cf15a8",
+      "serializedSha256": "ac5eb07658d15d1d78d0732827fb191efc5db84a2dbfb23a2f2d4dbca7cf15a8"
+    },
+    {
+      "case": "samples/wiha-50mm-drivers/wiha-50mm-drivers.pocketry.json",
+      "sourceFile": "samples/wiha-50mm-drivers/wiha-50mm-drivers.pocketry.json",
+      "sourceSha256": "bb85eede0a5358b910fb99759689954b05c581e153e3ca2bb45dc45abdecf869",
+      "kind": "project",
+      "inputSchemaVersion": 31,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "aff33bce0e152877cb3d9545dbec0c18665cdb7aa364892449e12e4868e4538e",
+      "serializedSha256": "aff33bce0e152877cb3d9545dbec0c18665cdb7aa364892449e12e4868e4538e"
+    },
+    {
+      "case": "samples/wiha-60mm-drivers/wiha-60mm-drivers.pocketry.json",
+      "sourceFile": "samples/wiha-60mm-drivers/wiha-60mm-drivers.pocketry.json",
+      "sourceSha256": "3698bd540981a105bcfcc1004558cac31d90b5b5059a66a43ffdb4b4f0aa00d9",
+      "kind": "project",
+      "inputSchemaVersion": 32,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "3546ce038f548bf5188be11b7eb1b15290e63429078299c2b847209e80e9882e",
+      "serializedSha256": "3546ce038f548bf5188be11b7eb1b15290e63429078299c2b847209e80e9882e"
+    },
+    {
+      "case": "samples/wiha-drivers/wiha-drivers.pocketry.json",
+      "sourceFile": "samples/wiha-drivers/wiha-drivers.pocketry.json",
+      "sourceSha256": "ebdf3ba1c817fcbee5c001326d63a8e4d3ca0e7c138f911badeca90e210d4cd3",
+      "kind": "project",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "bd1b30a610cb92a02020b79c0784a0c2d8f04075e7daa98ef9e70f2fcca4cdb9",
+      "serializedSha256": "bd1b30a610cb92a02020b79c0784a0c2d8f04075e7daa98ef9e70f2fcca4cdb9"
+    },
+    {
+      "case": "samples/wire-strippers/wire-strippers.pocketry.json",
+      "sourceFile": "samples/wire-strippers/wire-strippers.pocketry.json",
+      "sourceSha256": "9fed1a16fdaaa323a577685dd2959de77ebfc249f3ded051593cc529b15ac254",
+      "kind": "project",
+      "inputSchemaVersion": 36,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "8d5e8077593afccf8ee67010d40f4e266787e95fd1d3d3daae6f4abc8b0634fc",
+      "serializedSha256": "8d5e8077593afccf8ee67010d40f4e266787e95fd1d3d3daae6f4abc8b0634fc"
+    },
+    {
+      "case": "samples/wolfbox-mf70-airduster-kit/wolfbox-mf70-airduster-kit.pocketry.json",
+      "sourceFile": "samples/wolfbox-mf70-airduster-kit/wolfbox-mf70-airduster-kit.pocketry.json",
+      "sourceSha256": "e1fc4c5f842009b376987ae9b88140aff050f25b59fb41e5944ec13be8eeb073",
+      "kind": "project",
+      "inputSchemaVersion": 19,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "16797ae9fa188de2dcf11b4b079637c20bc5092060122cedceae005f2ae841da",
+      "serializedSha256": "16797ae9fa188de2dcf11b4b079637c20bc5092060122cedceae005f2ae841da"
+    },
+    {
+      "case": "shared/gridfinity/fixtures/airduster-v9.pocketry.json",
+      "sourceFile": "shared/gridfinity/fixtures/airduster-v9.pocketry.json",
+      "sourceSha256": "3a6726a687d292ec547ad532903c4a0d2ec994cd738f05897167efb712dc4048",
+      "kind": "project",
+      "inputSchemaVersion": 9,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "80adfc9ea7c0a4a06e1917b06d7438c4692fbba4e9e6fb6ad2a9802699e98eae",
+      "serializedSha256": "80adfc9ea7c0a4a06e1917b06d7438c4692fbba4e9e6fb6ad2a9802699e98eae"
+    },
+    {
+      "case": "shared/gridfinity/fixtures/ryobi-split-reload.pocketry.json",
+      "sourceFile": "shared/gridfinity/fixtures/ryobi-split-reload.pocketry.json",
+      "sourceSha256": "eb82e4094dd33e52107142e13feeecc6ee98dbf8d290f0052600799c3e60c6cd",
+      "kind": "project",
+      "inputSchemaVersion": 16,
+      "outputSchemaVersion": 36,
+      "parsedSha256": "740cf641f5528005601d4747889d779ec5273656f4b71cf604559a3eb02f4734",
+      "serializedSha256": "740cf641f5528005601d4747889d779ec5273656f4b71cf604559a3eb02f4734"
+    }
+  ]
+}

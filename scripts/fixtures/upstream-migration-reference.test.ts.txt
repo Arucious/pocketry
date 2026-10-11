@@ -1,0 +1,148 @@
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+import { afterAll, describe, expect, it } from "vitest";
+import { libraryBackupSchema } from "@shared/gridfinity/library";
+import {
+  PROJECT_SCHEMA_VERSION, parseProjectDoc, projectDocSchema, serializeProjectDoc,
+} from "@shared/gridfinity/project";
+
+/** Sort object keys only. JSON serialization removes undefined object fields;
+ * array order, numeric precision, strings, IDs, and nulls are preserved. */
+export function canonicalJson(value: unknown): string {
+  const sort = (data: unknown): unknown => {
+    if (Array.isArray(data)) return data.map(sort);
+    if (data !== null && typeof data === "object") {
+      return Object.fromEntries(Object.keys(data).sort().map(key =>
+        [key, sort((data as Record<string, unknown>)[key])],
+      ));
+    }
+    return data;
+  };
+  return JSON.stringify(sort(JSON.parse(JSON.stringify(value))));
+}
+export const sha256 = (data: string | Buffer): string =>
+  createHash("sha256").update(data).digest("hex");
+
+const root = process.cwd();
+const output = process.env.POCKETRY_MIGRATION_REPORT_DIR;
+if (!output) throw new Error("Set POCKETRY_MIGRATION_REPORT_DIR for comparison evidence");
+mkdirSync(path.join(output, "snapshots"), { recursive: true });
+const enumerate = (directory: string): string[] => readdirSync(directory, { withFileTypes: true })
+  .flatMap(entry => entry.isDirectory() ? enumerate(path.join(directory, entry.name))
+    : entry.name.endsWith(".pocketry.json") ? [path.join(directory, entry.name)] : [])
+  .sort();
+const relative = (file: string): string => path.relative(root, file).split(path.sep).join("/");
+const librarySource = "samples/pocketry-sample-library.json";
+const libraryBytes = readFileSync(path.join(root, librarySource));
+const rawLibrary = JSON.parse(libraryBytes.toString("utf8"));
+const library = libraryBackupSchema.parse(rawLibrary);
+const standaloneCases = enumerate(path.join(root, "samples")).map(file => ({
+  sourceFile: relative(file), libraryProjectId: null,
+  sourceBytes: readFileSync(file), raw: JSON.parse(readFileSync(file, "utf8")),
+}));
+const historicalCases = enumerate(path.join(root, "shared/gridfinity/fixtures")).map(file => ({
+  sourceFile: relative(file), libraryProjectId: null,
+  sourceBytes: readFileSync(file), raw: JSON.parse(readFileSync(file, "utf8")),
+}));
+const libraryCases = library.projects.map(project => ({
+  sourceFile: librarySource, libraryProjectId: project.id,
+  sourceBytes: libraryBytes, raw: project.doc,
+}));
+const cases = [...standaloneCases, ...historicalCases, ...libraryCases];
+type HashRecord = {
+  sourceFile: string; libraryProjectId: string | null; schemaPath: string;
+  rawSourceSha256: string; inputSchemaVersion: number; outputSchemaVersion: number;
+  canonicalParsedSha256: string; canonicalSerializedSha256: string;
+  canonicalMigratedSha256?: string;
+};
+const records: HashRecord[] = [];
+const snapshot = (key: string, data: unknown): void => {
+  writeFileSync(path.join(output, "snapshots", `${encodeURIComponent(key)}.json`),
+    `${JSON.stringify(JSON.parse(canonicalJson(data)), null, 2)}\n`);
+};
+
+describe("all bundled project migrations against pinned upstream", () => {
+  it.each(cases)("$sourceFile $libraryProjectId", entry => {
+    const parsed = parseProjectDoc(entry.raw);
+    expect(parsed, `Cannot migrate ${entry.sourceFile}/${entry.libraryProjectId ?? ""}`).not.toBeNull();
+    if (!parsed) throw new Error("Project parse returned null");
+    expect(projectDocSchema.safeParse(parsed).success).toBe(true);
+    expect(parsed.schemaVersion).toBe(PROJECT_SCHEMA_VERSION);
+    expect(canonicalJson(parseProjectDoc(entry.raw))).toBe(canonicalJson(parsed));
+    const serialized = serializeProjectDoc(parsed);
+    const roundtrip = parseProjectDoc(JSON.parse(JSON.stringify(serialized)));
+    expect(canonicalJson(roundtrip)).toBe(canonicalJson(parsed));
+    if (!roundtrip) throw new Error("Serialized roundtrip parse returned null");
+    expect(canonicalJson(serializeProjectDoc(roundtrip))).toBe(canonicalJson(serialized));
+    records.push({
+      sourceFile: entry.sourceFile, libraryProjectId: entry.libraryProjectId,
+      schemaPath: "parseProjectDoc/projectDocSchema/serializeProjectDoc",
+      rawSourceSha256: sha256(entry.sourceBytes), inputSchemaVersion: entry.raw.schemaVersion,
+      outputSchemaVersion: parsed.schemaVersion,
+      canonicalParsedSha256: sha256(canonicalJson(parsed)),
+      canonicalSerializedSha256: sha256(canonicalJson(serialized)),
+    });
+    snapshot(`${entry.sourceFile}${entry.libraryProjectId ? `#${entry.libraryProjectId}` : ""}`,
+      { parsed, serialized });
+  });
+
+  it("preserves the library backup envelope and project order across migration", () => {
+    expect(canonicalJson(library)).toBe(canonicalJson(rawLibrary));
+    const migrated = {
+      ...library, projects: library.projects.map(project => {
+        const doc = parseProjectDoc(project.doc);
+        if (!doc) throw new Error(`Cannot migrate library project ${project.id}`);
+        return { ...project, doc };
+      }),
+    };
+    const serialized = {
+      ...migrated, projects: migrated.projects.map(project =>
+        ({ ...project, doc: serializeProjectDoc(project.doc) })),
+    };
+    const parsedEnvelope = libraryBackupSchema.parse(JSON.parse(JSON.stringify(serialized)));
+    expect(parsedEnvelope.projects.map(project => project.id)).toEqual(library.projects.map(project => project.id));
+    expect(canonicalJson({ ...parsedEnvelope, projects: parsedEnvelope.projects.map(project =>
+      ({ ...project, doc: parseProjectDoc(project.doc) })) })).toBe(canonicalJson(migrated));
+    records.push({
+      sourceFile: librarySource, libraryProjectId: null,
+      schemaPath: "libraryBackupSchema + child project migrations",
+      rawSourceSha256: sha256(libraryBytes), inputSchemaVersion: library.schemaVersion,
+      outputSchemaVersion: serialized.schemaVersion,
+      canonicalParsedSha256: sha256(canonicalJson(library)),
+      canonicalMigratedSha256: sha256(canonicalJson(migrated)),
+      canonicalSerializedSha256: sha256(canonicalJson(serialized)),
+    });
+    snapshot(`${librarySource}#envelope`, { parsed: library, migrated, serialized });
+  });
+});
+
+afterAll(() => {
+  records.sort((a, b) => `${a.sourceFile}#${a.libraryProjectId ?? ""}`
+    .localeCompare(`${b.sourceFile}#${b.libraryProjectId ?? ""}`));
+  const require = createRequire(import.meta.url);
+  writeFileSync(path.join(output, "manifest.json"), `${JSON.stringify({
+    normalization: "JSON object keys sorted recursively; arrays, IDs and all serialized values preserved",
+    standaloneProjectCount: standaloneCases.length, historicalProjectCount: historicalCases.length,
+    libraryProjectCount: libraryCases.length,
+    envelopeCount: 1, completedCaseCount: records.length,
+    runtime: { node: process.version, zod: require("zod/package.json").version }, records,
+  }, null, 2)}\n`);
+  const expectedPath = process.env.POCKETRY_MIGRATION_GOLDENS;
+  if (expectedPath) {
+    const expected: { cases: unknown[] } = JSON.parse(readFileSync(expectedPath, "utf8"));
+    expect(records.map(record => ({
+      case: `${record.sourceFile}${record.libraryProjectId ? `#${record.libraryProjectId}` : ""}`,
+      sourceFile: record.sourceFile,
+      sourceSha256: record.rawSourceSha256,
+      kind: record.canonicalMigratedSha256 ? "library" : record.libraryProjectId ? "library-project" : "project",
+      ...(record.libraryProjectId ? { libraryProjectId: record.libraryProjectId } : {}),
+      inputSchemaVersion: record.inputSchemaVersion,
+      outputSchemaVersion: record.outputSchemaVersion,
+      parsedSha256: record.canonicalParsedSha256,
+      serializedSha256: record.canonicalSerializedSha256,
+      ...(record.canonicalMigratedSha256 ? { migratedSha256: record.canonicalMigratedSha256 } : {}),
+    }))).toEqual(expected.cases);
+  }
+});
