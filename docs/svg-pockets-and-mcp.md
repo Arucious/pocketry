@@ -156,6 +156,8 @@ MCP client using an absolute checkout path:
 | `pocketry_plan_svg_bin` | Return a validated editable project and sizing summary without writing files |
 | `pocketry_export_svg_bin` | Build and write STL, 3MF and editable project files |
 | `pocketry_export_project` | Export an existing Pocketry project through the same kernel |
+| `pocketry_inspect_image` | Report PNG/JPEG pixels, fingerprint and automatic marker calibration |
+| `pocketry_trace_image_svg` | Trace a calibrated photo to a closed, physically scaled SVG |
 
 SVG tools accept `svgPath`, optional artwork `widthMm`, and optional `name`.
 Planning/export accept an `options` object using the shared planner schema:
@@ -178,6 +180,58 @@ For asymmetric requirements the schema allows `gridX`, `gridY` and `heightUnits`
 individually; omitted dimensions remain automatic. The tools report input and
 geometry errors before writing export files. They operate locally and do not
 slice models or control printers.
+
+### Local photo tracing
+
+Photo processing runs in the local MCP process, using the browser's shared
+calibration, pure-JS segmentation, ring refinement and SVG writer. It is not an
+Express upload endpoint. `sharp` supplies PNG/JPEG decoding and EXIF orientation;
+its pinned version was already present in the lockfile. No network calls occur.
+Photos are limited to 20 MB and 50 million decoded pixels.
+
+Call `pocketry_inspect_image` with `imagePath` first. Automatic tracing accepts a
+complete, geometrically valid Pocketry reference-strip pair. The encoded marker
+**centre spacing** defines scale, rather than the printed aid's overall length
+(for example, the 50 mm aid has 35 mm centre spacing). Missing/invalid markers
+produce an error instead of assuming a scale. Sheet perspective calibration
+requiring image rectification must be completed before this scalar workflow.
+Alternatively supply explicit measured ruler endpoints:
+
+```json
+{
+  "imagePath": "/absolute/path/to/photo.jpg",
+  "svgPath": "/absolute/path/to/outline-v2.svg",
+  "options": {
+    "calibration": "auto",
+    "roi": { "x": 50, "y": 200, "width": 800, "height": 500 },
+    "exteriorOnly": true,
+    "toleranceMm": 0.05,
+    "smoothing": 1
+  }
+}
+```
+
+All pixel coordinates refer to the native **EXIF-oriented** image, before ROI
+cropping. A manual `calibration` is `{ "startX": 10, "startY": 20, "endX": 210,
+"endY": 20, "lengthMm": 50 }`; endpoints must be inside the image and distinct.
+`component` selects shells sorted by descending exterior area, default zero.
+`exteriorOnly` removes internal holes when only the outside footprint is wanted;
+the default preserves them. `sensitivity` (0–255) tunes the same segmentation
+bias as the browser. The summary records these choices and the input SHA-256.
+
+Review the SVG against the source photo: dark tool rims, shadows and reflections
+can confuse segmentation. Optional `outlinePx` supplies a reviewed exterior ring
+of `{x,y}` points, implicitly closed without repeating the first vertex. It uses
+the same refinement/export and topology validator; the summary records
+`engine: "reviewed-outline"` rather than claiming automatic detection. These
+coordinates are per-call data, never object-specific logic in the tracer.
+
+The SVG adds **no fit clearance**. Supply clearance explicitly when planning the
+bin. Calibration cannot prove coplanarity, remove lens distortion or establish
+physical fit. Output paths must use an existing directory; existing SVGs are
+preserved unless `overwrite: true` is explicitly supplied. The source photo
+path or a file alias cannot be used as the SVG output; symlink destinations
+are rejected even with overwrite enabled.
 
 ## Validation
 

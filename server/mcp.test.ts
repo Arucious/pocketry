@@ -6,6 +6,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import sharp from "sharp";
 
 import { importSvgShape } from "../shared/geometry/svg-import";
 import { planSvgBin } from "../shared/gridfinity/svg-bin";
@@ -40,11 +41,12 @@ function exported(): ExportResult {
 }
 
 describe("Pocketry MCP tools over the official SDK", () => {
-  it("advertises four tools, shared planner fields and local write annotations", async () => {
+  it("advertises photo and SVG tools, shared planner fields and local write annotations", async () => {
     const client = await connect();
     const { tools } = await client.listTools();
     expect(tools.map(tool => tool.name)).toEqual([
       "pocketry_inspect_svg", "pocketry_plan_svg_bin", "pocketry_export_svg_bin", "pocketry_export_project",
+      "pocketry_inspect_image", "pocketry_trace_image_svg",
     ]);
     expect(tools[0].annotations).toMatchObject({ readOnlyHint: true, openWorldHint: false });
     expect(tools[2].annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true, openWorldHint: false });
@@ -54,6 +56,31 @@ describe("Pocketry MCP tools over the official SDK", () => {
     expect(planSchema.properties).toHaveProperty("objectDepthMm");
     expect(planSchema.properties).toHaveProperty("objectHeightMm");
     expect(planSchema.required).toContain("objectDepthMm");
+  });
+
+  it("passes validated photo options to the shared local tracer", async () => {
+    const traceImageToSvg = vi.fn<PocketryMcpHandlers["traceImageToSvg"]>();
+    const client = await connect({ traceImageToSvg });
+    const response = await client.callTool({ name: "pocketry_trace_image_svg", arguments: {
+      imagePath: "photo.jpg", svgPath: "outline.svg", options: { exteriorOnly: true },
+    } });
+    expect(response.isError).not.toBe(true);
+    expect(traceImageToSvg).toHaveBeenCalledWith("photo.jpg", "outline.svg", expect.objectContaining({
+      calibration: "auto", exteriorOnly: true, toleranceMm: 0.05, component: 0,
+    }), false);
+  });
+
+  it("returns photo failures as tool errors and rejects invalid pixel regions before tracing", async () => {
+    const inspectImage = vi.fn<PocketryMcpHandlers["inspectImage"]>(async () => { throw new Error("Unsupported image"); });
+    const traceImageToSvg = vi.fn<PocketryMcpHandlers["traceImageToSvg"]>();
+    const client = await connect({ inspectImage, traceImageToSvg });
+    const failed = await client.callTool({ name: "pocketry_inspect_image", arguments: { imagePath: "bad.jpg" } });
+    expect(failed.isError).toBe(true);
+    const invalid = await client.callTool({ name: "pocketry_trace_image_svg", arguments: {
+      imagePath: "photo.jpg", svgPath: "outline.svg", options: { roi: { x: -1, y: 0, width: 10, height: 10 } },
+    } });
+    expect(invalid.isError).toBe(true);
+    expect(traceImageToSvg).not.toHaveBeenCalled();
   });
 
   it("inspects calibrated outline dimensions and reports y-up local coordinates", async () => {
@@ -180,7 +207,7 @@ describe("Pocketry MCP tools over the official SDK", () => {
     expect(exportProject).not.toHaveBeenCalled();
   });
 
-  it("starts the real stdio entrypoint and reads a local SVG without protocol noise", async () => {
+  it("starts the real stdio entrypoint and reads SVGs and traces photos without protocol noise", async () => {
     const directory = await mkdtemp(join(tmpdir(), "pocketry-mcp-"));
     cleanups.push(() => rm(directory, { recursive: true, force: true }));
     const svgPath = join(directory, "outline.svg");
@@ -200,10 +227,21 @@ describe("Pocketry MCP tools over the official SDK", () => {
     } catch (error) {
       throw new Error(`MCP stdio startup failed: ${stderr}`, { cause: error });
     }
-    expect((await client.listTools()).tools).toHaveLength(4);
+    expect((await client.listTools()).tools).toHaveLength(6);
     const response = await client.callTool({ name: "pocketry_inspect_svg", arguments: { svgPath } });
     expect(response.isError).not.toBe(true);
     expect(response.structuredContent).toMatchObject({ widthMm: 40, heightMm: 20 });
+    const imagePath = join(directory, "photo.jpg");
+    await sharp(Buffer.from('<svg width="100" height="80"><rect width="100" height="80" fill="#222"/><rect x="20" y="20" width="60" height="40" fill="white"/></svg>')).jpeg().toFile(imagePath);
+    const inspected = await client.callTool({ name: "pocketry_inspect_image", arguments: { imagePath } });
+    expect(inspected.structuredContent).toMatchObject({ widthPx: 100, heightPx: 80, automaticCalibration: { kind: "no-markers" } });
+    const traced = await client.callTool({ name: "pocketry_trace_image_svg", arguments: {
+      imagePath, svgPath: join(directory, "photo.svg"), options: {
+        calibration: { startX: 0, startY: 0, endX: 50, endY: 0, lengthMm: 25 }, smoothing: 0,
+      },
+    } });
+    expect(traced.isError).not.toBe(true);
+    expect(traced.structuredContent).toMatchObject({ engine: "js", detectedComponents: 1, mmPerPixel: 0.5 });
     expect(stderr).toBe("");
   }, 15000);
 });

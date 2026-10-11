@@ -351,6 +351,7 @@ Apache License 2.0:
   drizzle-zod
   idb-keyval
   manifold-3d (described separately above)
+  sharp (local photo decoding; described below)
 
 ISC License:
 
@@ -468,3 +469,22 @@ in their npm packages; original Pocketry and Gridfinity provenance is unchanged.
 
 `examples/svg-pocket/tool-outline.svg` is an original generic rounded-rectangle
 outline for the SVG automation examples, distributed under AGPL-3.0-only.
+
+================================================================================
+Local photo decoding — sharp (Apache-2.0) and libvips (LGPL-3.0-or-later)
+================================================================================
+
+sharp 0.35.3 is promoted from the existing lockfile to a pinned direct dependency
+for the local CLI/MCP photo adapter. It decodes PNG/JPEG pixels and applies EXIF
+orientation without a browser/canvas. Detection, calibration, ring refinement
+and SVG export remain Pocketry's existing modules. Express routes and browser
+bundles do not use this adapter. Source: https://github.com/lovell/sharp/tree/v0.35.3
+
+sharp declares Apache-2.0. Its dynamically loaded prebuilt libvips package
+retains LGPL-3.0-or-later; its README inventories the bundled components and
+links their licences. Compatibility review:
+Apache-2.0 and LGPL-3.0-or-later permit use alongside AGPL-3.0-only application
+code; the unmodified, separately replaceable library retains its own licence
+and notices rather than being relicensed. Distributors must preserve the
+library's notices/source and replacement rights. No third-party source is
+copied into Pocketry. Source/build provenance: https://github.com/lovell/sharp-libvips

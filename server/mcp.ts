@@ -5,6 +5,8 @@ import { z } from "zod";
 import packageMetadata from "../package.json";
 import { importSvgShape } from "../shared/geometry/svg-import";
 import { svgBinOptionsSchema } from "../shared/gridfinity/svg-bin";
+import { imageTraceOptionsSchema } from "../shared/geometry/image-trace";
+import { inspectImage, traceImageToSvg } from "../scripts/lib/trace-image";
 import {
   exportProject,
   readProjectFile,
@@ -18,6 +20,8 @@ export interface PocketryMcpHandlers {
   readProjectFile: typeof readProjectFile;
   readSvgBin: typeof readSvgBin;
   exportProject: typeof exportProject;
+  inspectImage: typeof inspectImage;
+  traceImageToSvg: typeof traceImageToSvg;
 }
 
 const localPath = z.string().trim().min(1).max(4096)
@@ -42,6 +46,14 @@ const exportProjectInputSchema = z.object({
   outDir: localPath.describe("Local export directory; created if needed."),
   name: z.string().trim().min(1).max(80).optional().describe("Optional output file stem."),
 }).strict();
+const imageInputSchema = z.object({
+  imagePath: localPath.describe("Local PNG/JPEG photo path; all coordinates refer to native EXIF-oriented pixels."),
+}).strict();
+const traceImageInputSchema = imageInputSchema.extend({
+  svgPath: localPath.describe("Output SVG path in an existing directory. Physical scale comes from the ruler, never image DPI."),
+  options: imageTraceOptionsSchema.default({}).describe("Automatic reference-strip or explicit ruler calibration, optional ROI, detail and component selection. Largest component is index zero."),
+  overwrite: z.boolean().default(false).describe("Allow replacing an existing SVG; disabled by default."),
+});
 
 const readOnlyAnnotations: ToolAnnotations = {
   readOnlyHint: true,
@@ -82,10 +94,13 @@ export function createPocketryMcpServer(overrides: Partial<PocketryMcpHandlers> 
     readProjectFile,
     readSvgBin,
     exportProject,
+    inspectImage,
+    traceImageToSvg,
     ...overrides,
   };
   const server = new McpServer({ name: "pocketry", version: packageMetadata.version }, {
-    instructions: "Pocketry's local SVG pocket tools use physical millimetres and the same planner/exporter as export:bin. "
+    instructions: "Pocketry's local photo and SVG pocket tools use physical millimetres and the same tracing/planning code as the browser and export:bin. "
+      + "Inspect a PNG/JPEG photo's reference-strip calibration, trace its selected silhouette to SVG, then inspect the measured SVG. Photo coordinates are native EXIF-oriented pixels, y-down; scale requires a valid marker strip or explicit ruler endpoints. "
       + "Inspect an SVG, plan the bin, then export. Planning returns an editable project and reports the selected whole-unit bin size. "
       + "Shape-local and explicit finger-access coordinates are y-up. Exports write local files and may replace matching artifact names. "
       + "Generated models use Pocketry's native Gridfinity profiles and are exported locally for editing or slicing.",
@@ -140,6 +155,22 @@ export function createPocketryMcpServer(overrides: Partial<PocketryMcpHandlers> 
     const project = await handlers.readProjectFile(projectPath);
     return { ...await handlers.exportProject(project, outDir, name) };
   }));
+
+  server.registerTool("pocketry_inspect_image", {
+    title: "Inspect photo calibration",
+    description: "Read a local PNG/JPEG, report EXIF-oriented pixel dimensions and SHA-256, and detect Pocketry calibration markers using the bundled OpenCV. Reports invalid/absent calibration without inventing a scale. Does not write files or upload photos.",
+    inputSchema: imageInputSchema,
+    annotations: readOnlyAnnotations,
+  }, async ({ imagePath }) => asToolResult(async () => ({ ...await handlers.inspectImage(imagePath) })));
+
+  server.registerTool("pocketry_trace_image_svg", {
+    title: "Trace calibrated photo to SVG",
+    description: "Use Pocketry's existing segmentation/refinement pipeline to trace a local PNG/JPEG into a physically scaled closed SVG. Supports automatic valid reference strips or explicit measured ruler endpoints, a pixel ROI, largest/selected component, optional exterior-only silhouette and a reviewed exterior ring for correcting low-contrast boundaries. No clearance is added. Inspect the output against the photo before CAD; marker geometry cannot establish coplanarity or physical fit. Refuses to overwrite files by default.",
+    inputSchema: traceImageInputSchema,
+    annotations: exportAnnotations,
+  }, async ({ imagePath, svgPath, options, overwrite }) => asToolResult(async () => ({
+    ...await handlers.traceImageToSvg(imagePath, svgPath, options, overwrite),
+  })));
 
   return server;
 }

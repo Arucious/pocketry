@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Inspect local photo calibration and trace PNG/JPEG silhouettes to physically scaled SVG through MCP, with pixel regions and reviewed boundary corrections.
 - Import calibrated SVG silhouettes as editable pockets, size whole-unit bins automatically, and place finger access along sides, ends, or explicit coordinates.
 - Export SVG pockets and saved projects from the command line, with a local stdio MCP server sharing the same geometry and validation.
 
