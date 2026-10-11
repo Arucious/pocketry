@@ -368,6 +368,7 @@ MIT License:
 
   @hookform/resolvers
   @jridgewell/trace-mapping
+  @modelcontextprotocol/sdk
   @neondatabase/serverless
   @radix-ui/react-* packages declared in package.json
   @react-three/drei
@@ -380,6 +381,7 @@ MIT License:
   embla-carousel-react
   express
   express-session
+  fast-xml-parser
   fflate
   framer-motion
   input-otp
@@ -394,6 +396,7 @@ MIT License:
   react-icons
   react-resizable-panels
   recharts
+  svgpath
   tailwind-merge
   tailwindcss-animate
   three
@@ -439,3 +442,29 @@ MIT License:
 The full licence text and package-specific copyright notice for an installed
 npm dependency can be found in that package's `node_modules` directory and its
 upstream source repository.
+
+================================================================================
+SVG import and local MCP dependencies — MIT License
+================================================================================
+
+fast-xml-parser 5.11.2 validates and parses SVG XML in browsers and Node without
+executing scripts or resolving external resources. Source and licence:
+https://github.com/NaturalIntelligence/fast-xml-parser
+
+svgpath 2.6.0 normalizes SVG path commands, transforms and elliptical arcs before
+Pocketry's adaptive curve sampling. It does not introduce a second polygon or
+solid geometry kernel. Source and licence: https://github.com/fontello/svgpath
+
+@modelcontextprotocol/sdk 1.32.1 provides the local stdio server and protocol
+client used by integration tests. The supported v1 line interoperates directly
+with Pocketry's existing Zod 3 schemas. Zod's minimum version is raised to 3.25.76
+to satisfy that SDK's supported dependency range; an override keeps the SDK on
+the same Zod 3 instance as Pocketry's shared schemas. Source and
+licence: https://github.com/modelcontextprotocol/typescript-sdk/tree/v1.x
+
+All three libraries declare MIT licences, compatible with Pocketry's existing
+AGPL-3.0-only distribution. Their installed licence and copyright notices remain
+in their npm packages; original Pocketry and Gridfinity provenance is unchanged.
+
+`examples/svg-pocket/tool-outline.svg` is an original generic rounded-rectangle
+outline for the SVG automation examples, distributed under AGPL-3.0-only.

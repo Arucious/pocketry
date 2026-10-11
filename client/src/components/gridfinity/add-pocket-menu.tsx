@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BasicPocketDialog } from "./basic-pocket-dialog";
-import { ChevronDown, CircleDot, Circle, RectangleHorizontal, Square, Type } from "lucide-react";
+import { ChevronDown, CircleDot, Circle, FileUp, RectangleHorizontal, Square, Type } from "lucide-react";
 import { AddObjectButton } from "./add-object-button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BASIC_POCKET_LABELS, type BasicPocketShape } from "@/lib/gridfinity/basic-shape";
@@ -9,6 +9,7 @@ import { usePanelState } from "@/components/layout/panel-context";
 import { useHasTouchInput, useIsMobile } from "@/hooks/use-mobile";
 import { useAddSurfaceText } from "./use-add-surface-text";
 import { useAddFingerAccess } from "./use-add-finger-access";
+import { SvgPocketDialog } from "./svg-pocket-dialog";
 
 /** Pocket picker with optional object actions for the compact toolbar. */
 export function AddPocketMenu({ label = "Add pocket", className, onStart, testId = "button-add-pocket", includeFingerAccess = false, iconOnly = false }: {
@@ -21,6 +22,7 @@ export function AddPocketMenu({ label = "Add pocket", className, onStart, testId
   const addFingerAccess = useAddFingerAccess(onStart);
   const hasTouch = useHasTouchInput();
   const [dimensionKind, setDimensionKind] = useState<BasicPocketShape | null>(null);
+  const [svgDialogOpen, setSvgDialogOpen] = useState(false);
   const draw = (kind: BasicPocketShape) => {
     onStart?.();
     dispatch({ type: "SET_EDITOR_MODE", editorMode: `draw-${kind}` });
@@ -42,6 +44,9 @@ export function AddPocketMenu({ label = "Add pocket", className, onStart, testId
           else draw(kind);
         }}><Icon className="mr-2 h-4 w-4" />{BASIC_POCKET_LABELS[kind]}{includeFingerAccess ? " pocket" : ""}</DropdownMenuItem>;
       })}
+      <DropdownMenuItem className="[@media(pointer:coarse)]:min-h-11" onSelect={() => {
+        onStart?.(); setSvgDialogOpen(true);
+      }}><FileUp className="mr-2 h-4 w-4" />Import SVG pocket</DropdownMenuItem>
       {includeFingerAccess && <>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="[@media(pointer:coarse)]:min-h-11" onSelect={addFingerAccess}>
@@ -56,5 +61,6 @@ export function AddPocketMenu({ label = "Add pocket", className, onStart, testId
     {dimensionKind && <BasicPocketDialog key={dimensionKind} kind={dimensionKind}
       onClose={() => { setDimensionKind(null); if (isMobile) setPanelOpen(false); }}
       onDraw={() => { draw(dimensionKind); setDimensionKind(null); }} />}
+    {svgDialogOpen && <SvgPocketDialog onClose={() => { setSvgDialogOpen(false); if (isMobile) setPanelOpen(false); }} />}
   </>;
 }

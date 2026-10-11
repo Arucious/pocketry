@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Import calibrated SVG silhouettes as editable pockets, size whole-unit bins automatically, and place finger access along sides, ends, or explicit coordinates.
+- Export SVG pockets and saved projects from the command line, with a local stdio MCP server sharing the same geometry and validation.
+
 - Surface text and its font, color, placement, and editing controls are now available by default, without experimental opt-in.
 
 - Added editable, photo-matched labels to six sample projects, including corrected Bessey lettering.

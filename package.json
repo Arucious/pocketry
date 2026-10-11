@@ -14,11 +14,13 @@
     "generate:calibration-templates": "tsx scripts/generate-calibration-templates.ts",
     "generate:reference-strip": "tsx scripts/generate-reference-strip.ts",
     "export:bin": "tsx scripts/export-bin.ts",
+    "mcp": "tsx scripts/mcp.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@neondatabase/serverless": "^0.10.4",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
@@ -60,6 +62,7 @@
     "embla-carousel-react": "^8.3.0",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
+    "fast-xml-parser": "5.11.2",
     "fflate": "^0.8.3",
     "framer-motion": "^11.13.1",
     "idb-keyval": "^6.3.0",
@@ -77,13 +80,14 @@
     "react-icons": "^5.4.0",
     "react-resizable-panels": "^2.1.4",
     "recharts": "^2.13.0",
+    "svgpath": "2.6.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.180.0",
     "vaul": "^1.1.0",
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
-    "zod": "^3.23.8",
+    "zod": "^3.25.76",
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
@@ -114,5 +118,10 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
+  },
+  "overrides": {
+    "@modelcontextprotocol/sdk": {
+      "zod": "$zod"
+    }
   }
 }

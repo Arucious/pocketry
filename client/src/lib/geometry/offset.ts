@@ -9,7 +9,7 @@ import {
 // injected by the caller (see `Kernel` in ../manifold/runtime).
 import type { CrossSection, JoinType } from "manifold-3d";
 
-import { withKernel, type Kernel } from "@/lib/manifold/runtime";
+import type { Kernel } from "@/lib/manifold/runtime";
 
 import { buildOutline, normalizeOutline } from "./outline";
 
@@ -216,6 +216,10 @@ export async function offsetOutline(
   // Fast path, hoisted ahead of `withKernel` so a zero margin never pays for
   // loading the wasm.
   if (normalized.length === 0 || deltaPx === 0) return normalized;
+
+  // Injected helpers also run under plain Node. Load the browser runtime only
+  // when its convenience wrapper is actually called.
+  const { withKernel } = await import("@/lib/manifold/runtime");
 
   // `offsetOutlineWithKernel` normalises again; `normalizeOutline` is
   // idempotent and O(points), which is noise beside the Clipper2 call, and
