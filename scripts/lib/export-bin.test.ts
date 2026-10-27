@@ -1,12 +1,14 @@
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { unzipSync, strFromU8 } from "fflate";
 import { afterEach, describe, expect, it } from "vitest";
 import { PROJECT_SCHEMA_VERSION, parseProjectDoc, projectDocSchema } from "../../shared/gridfinity/project";
 import { parseBinSpec } from "../../shared/gridfinity/types";
 import { DEFAULT_BIN_MATERIALS } from "../../shared/gridfinity/materials";
-import { exportProject, readProjectFile, readSvgBin, readSvgFile } from "./export-bin";
+import { exportProject, readDepthProfileFile, readProjectFile, readSvgBin, readSvgFile } from "./export-bin";
 
 const directories: string[] = [];
 async function temporaryDirectory() {
@@ -19,6 +21,24 @@ afterEach(async () => { await Promise.all(directories.splice(0).map(path => rm(p
 const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="72mm" height="32mm" viewBox="0 0 72 32"><rect x="4" y="4" width="64" height="24" rx="2"/></svg>';
 
 describe("shared headless export", () => {
+  it("exports CLI depth stations and JSON profiles through the same printable kernel", async () => {
+    const directory = await temporaryDirectory(), input = join(directory, "tool.svg"), file = join(directory, "profile.json");
+    await writeFile(input, svg);
+    const profile = { axis: "x", stations: [{ atMm: 0, depthMm: 11, transition: "step" },
+      { atMm: 20, depthMm: 11, transition: "smooth" }, { atMm: 40, depthMm: 5, transition: "linear" }, { atMm: 60, depthMm: 4, transition: "step" }] };
+    await writeFile(file, JSON.stringify(profile));
+    expect(await readDepthProfileFile(file)).toEqual(profile);
+    const base = ["--import", "tsx", "scripts/export-bin.ts", "--svg", input, "--object-depth", "11", "--finger-access", "none", "--json"];
+    const { stdout } = await promisify(execFile)(process.execPath, [...base, "--depth-profile", file, "--out", join(directory, "json")]);
+    const exported = JSON.parse(stdout);
+    const saved = await readProjectFile(exported.paths.project);
+    expect(saved.cutouts[0].depthProfile!.stations.map(s => s.depthMm)).toEqual([11.2, 11.2, 5.2, 4.2]);
+    expect(exported.triangles).toBeGreaterThan(100);
+    const { stdout: inline } = await promisify(execFile)(process.execPath, [...base, "--depth-axis", "x",
+      ...profile.stations.flatMap(s => ["--depth-station", `${s.atMm}:${s.depthMm}:${s.transition}`]), "--out", join(directory, "inline")]);
+    expect((await readProjectFile(JSON.parse(inline).paths.project)).cutouts).toEqual(saved.cutouts);
+    expect(await readFile(JSON.parse(inline).paths.stl)).toEqual(await readFile(exported.paths.stl));
+  }, 30_000);
   it("gives different artwork and calibration distinct immutable shape ids", async () => {
     const directory = await temporaryDirectory();
     const first = join(directory, "first.svg"), second = join(directory, "second.svg");

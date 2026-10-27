@@ -300,6 +300,9 @@ For SVG pocket import, automatic bin sizing, explicit finger-access placement,
 command-line exports, and the local MCP server, see
 [SVG pockets and local automation](docs/svg-pockets-and-mcp.md).
 
+For multiple pocket depths, sharp steps, ramps, and smooth floor transitions in
+the editor, CLI, and MCP, see [Depth stations](docs/depth-stations.md).
+
 Run the required type-check and test gate:
 
 ```sh

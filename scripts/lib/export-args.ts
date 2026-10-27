@@ -1,5 +1,6 @@
 import type { BinSpecInput } from "../../shared/gridfinity/types";
 import type { SvgBinOptionsInput } from "../../shared/gridfinity/svg-bin";
+import { depthProfileSchema } from "../../shared/gridfinity/depth-profile";
 
 export const EXPORT_USAGE = `Usage:
   npm run export:bin -- [GRIDXxGRIDYxUNITS] [--fill none|solid] [--no-lip] [--out DIR]
@@ -10,6 +11,9 @@ SVG options: --svg-width MM, --clearance MM, --depth-clearance MM,
   --stacking-clearance MM, --floor MM, --rotation DEGREES, --no-auto-rotate,
   --finger-diameter MM, --finger-extension MM, --finger-depth MM,
   --finger-center X,Y (repeat for custom positions in bin-local mm, y-up).
+  --depth-profile FILE (JSON with axis and stations), or --depth-axis x|y
+  --depth-station POSITION:DEPTH[:step|linear|smooth] (repeat, starting at 0).
+Station positions use the unscaled source outline; transitions lead to the next station.
 Supply GRIDXxGRIDYxUNITS to fix all dimensions; otherwise SVG bins auto-size.
 Use --plan to inspect an SVG design without writing files, --json for JSON,
   --name STEM to name artifacts. --help shows this message.`;
@@ -18,6 +22,7 @@ export interface ExportArgs {
   svgPath?: string;
   projectPath?: string;
   svgWidthMm?: number;
+  depthProfilePath?: string;
   svgOptions: SvgBinOptionsInput;
   spec: BinSpecInput;
   outDir: string;
@@ -35,6 +40,8 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
   };
   const svgOnly = new Set<string>();
   let depthProvided = false;
+  let depthAxis: "x" | "y" = "x";
+  const stations: { atMm: number; depthMm: number; transition: string }[] = [];
   let fixedDimensions = false;
   let fillProvided = false;
   let lipProvided = false;
@@ -53,7 +60,7 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
       if (next === undefined || next.startsWith("--") || !next.trim()) throw new Error(`${arg} requires a value.`);
       return next;
     };
-    if (arg.startsWith("--") && arg !== "--finger-center") {
+    if (arg.startsWith("--") && arg !== "--finger-center" && arg !== "--depth-station") {
       if (seen.has(arg)) {
         if (!legacyRepeatable.has(arg)) throw new Error(`Duplicate argument: ${arg}`);
         legacyDuplicates.add(arg);
@@ -61,6 +68,16 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
       seen.add(arg);
     }
     if (arg === "--svg") options.svgPath = value();
+    else if (arg === "--depth-profile") { options.depthProfilePath = value(); svgOnly.add(arg); }
+    else if (arg === "--depth-axis") {
+      const axis = value(); if (axis !== "x" && axis !== "y") throw new Error("--depth-axis requires x or y.");
+      depthAxis = axis; svgOnly.add(arg);
+    } else if (arg === "--depth-station") {
+      const parts = value().split(":");
+      if (parts.length < 2 || parts.length > 3) throw new Error("--depth-station requires POSITION:DEPTH[:step|linear|smooth].");
+      stations.push({ atMm: numberValue(parts[0], arg), depthMm: numberValue(parts[1], arg), transition: parts[2] ?? "step" });
+      svgOnly.add(arg);
+    }
     else if (arg === "--project") options.projectPath = value();
     else if (arg === "--out") options.outDir = value();
     else if (arg === "--name") options.name = value();
@@ -107,6 +124,9 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
     } else throw new Error(`Unknown argument: ${arg}`);
   }
   if (options.svgPath && options.projectPath) throw new Error("Choose either --svg or --project.");
+  if (options.depthProfilePath && (stations.length || seen.has("--depth-axis"))) throw new Error("Choose a depth-profile JSON file or inline depth stations, not both.");
+  if (seen.has("--depth-axis") && !stations.length) throw new Error("--depth-axis requires depth stations.");
+  if (stations.length) options.svgOptions.depthProfile = depthProfileSchema.parse({ axis: depthAxis, stations });
   // Original empty-bin commands use the last supplied legacy option. Preserve
   // that contract while keeping the new SVG/project modes unambiguous.
   if ((options.svgPath || options.projectPath) && legacyDuplicates.size) {

@@ -1,13 +1,14 @@
 /** Export empty bins, SVG pocket bins, or saved projects through the same kernel. */
 import { parseBinSpec } from "../shared/gridfinity/types";
 import { PROJECT_SCHEMA_VERSION, projectDocSchema } from "../shared/gridfinity/project";
-import { exportProject, readProjectFile, readSvgBin } from "./lib/export-bin";
+import { exportProject, readDepthProfileFile, readProjectFile, readSvgBin } from "./lib/export-bin";
 import { EXPORT_USAGE, parseExportArgs } from "./lib/export-args";
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   if (argv.length === 1 && argv[0] === "--help") { console.log(EXPORT_USAGE); return; }
   const cli = parseExportArgs(argv);
+  if (cli.depthProfilePath) cli.svgOptions.depthProfile = await readDepthProfileFile(cli.depthProfilePath);
   const planned = cli.svgPath ? await readSvgBin(cli.svgPath, cli.svgOptions, { widthMm: cli.svgWidthMm }) : undefined;
   if (cli.planOnly && planned) {
     console.log(JSON.stringify(planned, null, 2));

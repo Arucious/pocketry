@@ -41,6 +41,16 @@ function exported(): ExportResult {
 }
 
 describe("Pocketry MCP tools over the official SDK", () => {
+  it("exposes depth stations and transition modes through the shared planner schema", async () => {
+    const readSvgBin = vi.fn<PocketryMcpHandlers["readSvgBin"]>(async () => planSvgBin(importSvgShape(svg), { objectDepthMm: 12 }));
+    const client = await connect({ readSvgBin });
+    const profile = { axis: "x", stations: [{ atMm: 0, depthMm: 12, transition: "step" },
+      { atMm: 10, depthMm: 12, transition: "smooth" }, { atMm: 30, depthMm: 4, transition: "linear" }] };
+    const response = await client.callTool({ name: "pocketry_plan_svg_bin", arguments: { svgPath: "tool.svg",
+      options: { objectDepthMm: 12, depthProfile: profile } } });
+    expect(response.isError).not.toBe(true);
+    expect(readSvgBin).toHaveBeenCalledWith("tool.svg", expect.objectContaining({ depthProfile: profile }), expect.anything());
+  });
   it("advertises photo and SVG tools, shared planner fields and local write annotations", async () => {
     const client = await connect();
     const { tools } = await client.listTools();

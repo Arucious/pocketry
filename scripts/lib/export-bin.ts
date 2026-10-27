@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { basename, join, resolve } from "node:path";
 import Module, { type Manifold, type ManifoldToplevel } from "manifold-3d";
 import { importSvgShape } from "../../shared/geometry/svg-import";
+import { depthProfileSchema, type DepthProfile } from "../../shared/gridfinity/depth-profile";
 import { planSvgBin, type SvgBinPlan } from "../../shared/gridfinity/svg-bin";
 import { parseProjectDoc, serializeProjectDoc, type ProjectDoc } from "../../shared/gridfinity/project";
 import { validateBinSpec, validateLayout, type ValidationIssue } from "../../shared/gridfinity/validate";
@@ -57,6 +58,11 @@ async function readBoundedFile(path: string, maximumBytes: number): Promise<stri
 /** Shared CLI/MCP boundary: SVGs remain local, with a bounded input size. */
 export function readSvgFile(path: string): Promise<string> {
   return readBoundedFile(path, 2 * 1024 * 1024);
+}
+
+/** A bounded JSON input uses the same schema as the editor and MCP planner. */
+export async function readDepthProfileFile(path: string): Promise<DepthProfile> {
+  return depthProfileSchema.parse(JSON.parse(await readBoundedFile(path, 128 * 1024)));
 }
 
 /** Read existing versioned Pocketry projects through their normal migration gate. */

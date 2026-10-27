@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { depthProfileSchema, depthProfileError, maximumProfileDepth, type DepthProfile } from "./depth-profile";
 
 import { minAreaObb } from "../geometry/obb";
 import { distanceToSegment, pointInRing, ringBounds, signedArea } from "../geometry/rings";
@@ -53,6 +54,7 @@ export const svgFingerAccessOptionsSchema = z.object({
 /** One upright SVG pocket; source geometry is already calibrated in millimetres. */
 export const svgBinOptionsSchema = z.object({
   objectDepthMm: z.number().finite().positive().max(280),
+  depthProfile: depthProfileSchema.optional(),
   /** Highest part above the floor, including features outside the pocket body. */
   objectHeightMm: z.number().finite().positive().max(280).optional(),
   clearanceMm: z.number().finite().min(0).max(5).default(0.3),
@@ -71,6 +73,10 @@ export const svgBinOptionsSchema = z.object({
   lip: z.enum(["standard", "none"]).default("standard"),
   name: z.string().trim().min(1).max(80).optional(),
 }).strict().superRefine((options, context) => {
+  if (options.depthProfile && maximumProfileDepth(options.depthProfile) + options.depthClearanceMm > 280) context.addIssue({
+    code: z.ZodIssueCode.custom, path: ["depthProfile"], message: "Depth stations including clearance must be at most 280 mm deep." });
+  if (options.depthProfile && maximumProfileDepth(options.depthProfile) > options.objectDepthMm) context.addIssue({
+    code: z.ZodIssueCode.custom, path: ["depthProfile"], message: "Object depth must include the deepest depth station." });
   if (options.objectHeightMm !== undefined && options.objectHeightMm < options.objectDepthMm) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["objectHeightMm"], message: "Object height must include the entire pocket body depth." });
   }
@@ -92,6 +98,7 @@ export interface SvgBinSummary {
   rotationDeg: number;
   pocketPositionMm: Point;
   pocketDepthMm: number;
+  depthProfile?: DepthProfile;
   floorZMm: number;
   deckZMm: number;
   objectTopZMm: number;
@@ -188,7 +195,7 @@ function connectedToPocket(outline: Outline, center: Point, radiusMm: number): b
 }
 
 function verticalSpec(options: SvgBinOptions): { heightUnits: number; fillHeightPercent: number; deckZMm: number; floorZMm: number } {
-  const pocketDepth = options.objectDepthMm + options.depthClearanceMm;
+  const pocketDepth = (options.depthProfile ? maximumProfileDepth(options.depthProfile) : options.objectDepthMm) + options.depthClearanceMm;
   const objectHeight = options.objectHeightMm ?? options.objectDepthMm;
   const lipAllowance = options.lip === "standard" ? STACKING_LIP_SUPPORT_HEIGHT : 0;
   const heights = options.heightUnits === undefined
@@ -235,6 +242,10 @@ interface Candidate {
 export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgBinPlan {
   const options = svgBinOptionsSchema.parse(inputOptions);
   const shape = tracedShapeSchema.parse(inputShape);
+  if (options.depthProfile) {
+    const error = depthProfileError(options.depthProfile, shape.outlineMm);
+    if (error) throw new Error(error);
+  }
   if (shape.outlineMm.some(part => signedArea(part.outer) <= EPSILON || part.holes.some(ring => signedArea(ring) >= -EPSILON))) {
     throw new Error("SVG rings must have nonzero area, positive outer winding and negative hole winding.");
   }
@@ -244,7 +255,8 @@ export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgB
   const aligned = rotateOutline(shape.outlineMm, obb.angleDeg);
   const rawCenters = automaticCenters(aligned, options);
   const vertical = verticalSpec(options);
-  const pocketDepth = options.objectDepthMm + options.depthClearanceMm;
+  const pocketDepth = (options.depthProfile ? maximumProfileDepth(options.depthProfile) : options.objectDepthMm) + options.depthClearanceMm;
+  const depthProfile = options.depthProfile ? { ...options.depthProfile, stations: options.depthProfile.stations.map(s => ({ ...s, depthMm: s.depthMm + options.depthClearanceMm })) } : undefined;
   const diameter = options.fingerAccess.diameterMm;
   const radius = diameter / 2;
   const requestedDepth = options.fingerAccess.depthMm ?? Math.min(120, Math.max(1, pocketDepth - 1));
@@ -276,7 +288,7 @@ export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgB
       y: -(custom ? outlineBox.minY + outlineBox.maxY : envelope.minY + envelope.maxY) / 2 };
     if (!custom) centers = centers.map(center => ({ x: center.x + position.x, y: center.y + position.y }));
     const placement = parseCutoutPlacement({ id: "svg-pocket", shapeId: shape.id, name: options.name ?? shape.name,
-      position, rotationDeg, depth: { mode: "mm", value: pocketDepth }, clearanceMm: options.clearanceMm,
+      position, rotationDeg, depth: { mode: "mm", value: pocketDepth }, depthProfile, clearanceMm: options.clearanceMm,
       cornerRoundMm: 0, topFilletMm: 0, bottomFilletMm: 0 });
     const placedOutline = transformOutlinePlacement(shape.outlineMm, placement);
     if (centers.some(center => !connectedToPocket(placedOutline, center, radius + options.clearanceMm))) continue;
@@ -311,7 +323,7 @@ export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgB
   if (!best) throw new Error("No full-grid bin fits the SVG pocket and finger access while preserving the wall and stacking lip. Check explicit dimensions, centres or finger diameter.");
   const spec = best.spec;
   const cutout = parseCutoutPlacement({ id: "svg-pocket", shapeId: shape.id, name: options.name ?? shape.name,
-    position: best.position, rotationDeg: best.rotationDeg, depth: { mode: "mm", value: pocketDepth }, clearanceMm: options.clearanceMm,
+    position: best.position, rotationDeg: best.rotationDeg, depth: { mode: "mm", value: pocketDepth }, depthProfile, clearanceMm: options.clearanceMm,
     cornerRoundMm: 0, topFilletMm: 0, bottomFilletMm: 0 });
   const project = projectDocSchema.parse({ schemaVersion: PROJECT_SCHEMA_VERSION, name: options.name ?? shape.name,
     shapes: [shape], spec, cutouts: [cutout], fingerHoles: best.holes });
@@ -321,7 +333,7 @@ export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgB
     dimensionsMm: { widthMm: binFootprintMm(spec.gridX), lengthMm: binFootprintMm(spec.gridY), heightToRimMm: plane,
       totalHeightMm: binTotalHeightMm(spec.heightUnits, spec.lip === "standard") },
     objectDimensionsMm: { widthMm: obb.widthMm, lengthMm: obb.heightMm }, rotationDeg: best.rotationDeg,
-    pocketPositionMm: best.position, pocketDepthMm: pocketDepth, floorZMm: floor, deckZMm: deck,
+    pocketPositionMm: best.position, pocketDepthMm: pocketDepth, ...(depthProfile ? { depthProfile } : {}), floorZMm: floor, deckZMm: deck,
     objectTopZMm: floor + (options.objectHeightMm ?? options.objectDepthMm), stackingPlaneZMm: plane,
     stackingClearanceMm: plane - floor - (options.objectHeightMm ?? options.objectDepthMm),
     fingerPlacement: options.fingerAccess.placement, fingerCentersMm: best.holes.map(hole => hole.center),

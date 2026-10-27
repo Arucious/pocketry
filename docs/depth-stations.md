@@ -52,3 +52,50 @@ preserved in history, project libraries, linked designs, and transform origins.
 STL and 3MF encode the actual stepped or ramped floor. SVG/DXF remain top-down
 templates. Smooth blends use linear facets with at most 0.01 mm vertical chord
 error, identically in previews, rigid placement and exports.
+
+## CLI
+
+Inline stations use `POSITION:DEPTH[:TRANSITION]`. The transition defaults to
+`step`; available names are `step`, `linear`, and `smooth`. X is the default axis.
+The following outline is 64 mm long, so the stations fit its X dimension:
+
+```sh
+npm run export:bin -- --svg examples/svg-pocket/tool-outline.svg \
+  --object-depth 11 --depth-axis x \
+  --depth-station 0:11:step --depth-station 25:11:smooth \
+  --depth-station 45:5:step --depth-station 60:3 \
+  --out exports/stepped-tool
+```
+
+Alternatively save this as `profile.json`:
+
+```json
+{
+  "axis": "x",
+  "stations": [
+    { "atMm": 0, "depthMm": 11, "transition": "step" },
+    { "atMm": 25, "depthMm": 11, "transition": "smooth" },
+    { "atMm": 45, "depthMm": 5, "transition": "step" },
+    { "atMm": 60, "depthMm": 3, "transition": "step" }
+  ]
+}
+```
+
+```sh
+npm run export:bin -- --svg examples/svg-pocket/tool-outline.svg \
+  --object-depth 11 --depth-profile profile.json --plan
+```
+
+Choose either a file or inline stations. The JSON file is limited to 128 KiB.
+`--object-depth` must include the deepest station; `--object-height` can separately
+reserve stacking clearance for a taller feature. `--depth-clearance` is added
+once to every station when planning from an SVG. An existing `.pocketry.json`
+already contains final depths, so `--project` exports it unchanged.
+
+## MCP
+
+`pocketry_plan_svg_bin` and `pocketry_export_svg_bin` accept the identical JSON
+object as `options.depthProfile`, alongside `objectDepthMm`. Their shared schema
+validates stations before planning. The returned summary reports the actual
+profile including depth clearance. `pocketry_export_project` reads profiles from
+saved projects; no separate geometry implementation is used.

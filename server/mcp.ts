@@ -127,7 +127,7 @@ export function createPocketryMcpServer(overrides: Partial<PocketryMcpHandlers> 
 
   server.registerTool("pocketry_plan_svg_bin", {
     title: "Plan SVG pocket bin",
-    description: "Read an SVG and find the smallest feasible whole-cell stackable Pocketry bin among the planner's tested rotations. objectDepthMm controls the pocket's main body depth; objectHeightMm covers a taller upside feature for stacking clearance. Finger access supports sides, ends, both, none, or explicit bin-local centres. Returns an editable project and dimensional summary without writing files.",
+    description: "Read an SVG and find the smallest feasible whole-cell stackable Pocketry bin among the planner's tested rotations. objectDepthMm includes the deepest seat; objectHeightMm covers a taller upside feature for stacking clearance. Optional depthProfile specifies up to 64 source-local stations with step, linear or smooth transitions; depthClearanceMm is added once to every station. Finger access supports sides, ends, both, none, or explicit bin-local centres. Returns an editable project and dimensional summary without writing files.",
     inputSchema: planInputSchema,
     annotations: readOnlyAnnotations,
   }, async ({ svgPath, widthMm, name, options }) => asToolResult(async () => {

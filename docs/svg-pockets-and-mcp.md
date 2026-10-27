@@ -39,6 +39,11 @@ preserve the supplied outline.
 
 ## Command-line use
 
+Multiple depths, sharp steps, straight ramps and smooth transitions are also
+supported through [Depth stations](depth-stations.md), using inline
+`--depth-station` options or `--depth-profile` JSON. MCP accepts the same profile
+as `options.depthProfile`; existing project exports retain their saved settings.
+
 Install dependencies with Node.js 22 and `npm ci`, then run the included generic
 64 × 24 mm outline:
 

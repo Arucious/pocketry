@@ -2,6 +2,24 @@ import { describe, expect, it } from "vitest";
 import { parseExportArgs } from "./export-args";
 
 describe("export CLI arguments", () => {
+  it("parses multiple outgoing depth transitions in source millimetres", () => {
+    const args = parseExportArgs(["--svg", "tool.svg", "--object-depth", "12", "--depth-axis", "y",
+      "--depth-station", "0:11", "--depth-station", "40:11:smooth", "--depth-station", "60:4:linear", "--depth-station", "80:3"]);
+    expect(args.svgOptions.depthProfile).toEqual({ axis: "y", stations: [
+      { atMm: 0, depthMm: 11, transition: "step" }, { atMm: 40, depthMm: 11, transition: "smooth" },
+      { atMm: 60, depthMm: 4, transition: "linear" }, { atMm: 80, depthMm: 3, transition: "step" },
+    ] });
+    expect(parseExportArgs(["--svg", "tool.svg", "--object-depth", "12", "--depth-profile", "profile.json"]).depthProfilePath).toBe("profile.json");
+  });
+  it.each([
+    ["--depth-axis", "z"], ["--depth-axis", "x"], ["--depth-station", "bad"],
+    ["--depth-station", "0:4", "--depth-station", "0:6"],
+    ["--depth-station", "0:4", "--depth-station", "10:6:bezier"],
+    ["--depth-profile", "p.json", "--depth-station", "0:4"],
+    ["--depth-profile", "p.json", "--depth-axis", "y"],
+  ])("rejects ambiguous or invalid profile syntax %j", (...args) => {
+    expect(() => parseExportArgs(["--svg", "tool.svg", "--object-depth", "12", ...args])).toThrow();
+  });
   it("preserves the empty-bin defaults and legacy solid/no-lip syntax", () => {
     expect(parseExportArgs([]).spec).toEqual({ gridX: 2, gridY: 3, heightUnits: 6, fill: "none", lip: "standard" });
     expect(parseExportArgs(["4x2x3", "--fill", "solid", "--no-lip"]).spec)
