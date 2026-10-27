@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Match finger-access floors to nearby depth ramps, bevel their openings, and block cuts into the protected base; support the same settings in CLI and MCP exports.
+
 - Add up to 64 depth stations per pocket with sharp steps, straight ramps, or smooth blends, editable side profiles and layout guides; preserve settings in saved projects.
 - Plan and export depth profiles through inline CLI stations, JSON files, and the shared local MCP planner.
 

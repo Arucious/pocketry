@@ -1,6 +1,7 @@
 import type { Manifold } from "manifold-3d";
 import {
   elongatedFingerHoleEndpoints,
+  fingerHoleFootprintRing,
   effectiveFingerHoleDepthMm,
   effectiveFingerHoleCornerRoundMm,
   capsuleRing,
@@ -13,6 +14,31 @@ import {
 } from "@shared/gridfinity/cutout";
 import type { Kernel } from "@/lib/manifold/runtime";
 import type { FilletOptions } from "./fillet-stack";
+
+/** Continuous 45-degree entry bevel. The fixed ring topology preserves round
+ * and slot mouths without the horizontal ledges of an offset-layer stack. */
+export function buildChamferedFingerAccessCutter(kernel: Kernel, hole: FingerHole,
+  topZ: number, cutterTopZ: number, width: number, segments: number): Manifold {
+  const { arena, CrossSection } = kernel;
+  const ring = fingerHoleFootprintRing(hole, { position: { x: 0, y: 0 }, rotationDeg: 0, mirrored: false }, segments);
+  const section = arena.track(new CrossSection([ring.map(p => [p.x, p.y] as [number, number])]));
+  // Offset once, then map each outer vertex to its nearest point on the mouth.
+  const expanded = arena.track(section.offset(width, "Round", 2, segments));
+  const prism = arena.track(expanded.extrude(2, 1));
+  return arena.track(prism.warp(v => {
+    let qx = v[0], qy = v[1], best = Infinity;
+    for (let i = 0; i < ring.length; i++) {
+      const a = ring[i], b = ring[(i + 1) % ring.length];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const t = Math.max(0, Math.min(1, ((v[0] - a.x) * dx + (v[1] - a.y) * dy) / (dx * dx + dy * dy)));
+      const x = a.x + t * dx, y = a.y + t * dy, d = (x - v[0]) ** 2 + (y - v[1]) ** 2;
+      if (d < best) { best = d; qx = x; qy = y; }
+    }
+    const level = Math.round(v[2]);
+    if (level === 0) { v[0] = qx; v[1] = qy; }
+    v[2] = level === 0 ? topZ - width : level === 1 ? topZ : cutterTopZ;
+  }));
+}
 
 /** Exact transverse circle/fillet tangency, measured from the bin's top (z=0). */
 export function fingerAccessRimGeometry(

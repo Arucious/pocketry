@@ -8,7 +8,7 @@ export interface DesignObjects { cutouts: CutoutPlacement[]; fingerHoles: Finger
 // explicit link id, validated in every saved snapshot, makes these fields one
 // shared design. Shape revisions remain immutable and update all references.
 const pocketFields = ["shapeId", "scaleX", "scaleY", "aspectRatioLocked", "depth", "split", "depthProfile", "profileBottom", "clearanceMm", "cornerRoundMm", "topFilletMm", "bottomFilletMm", "insertionMode"] as const;
-const fingerFields = ["kind", "diameterMm", "lengthMm", "depthMm", "topFilletMm", "bottomFilletMm", "cornerRoundMm", "slotEnds"] as const;
+const fingerFields = ["kind", "diameterMm", "lengthMm", "depthMm", "depthMode", "topFilletMm", "topChamferMm", "bottomFilletMm", "cornerRoundMm", "slotEnds"] as const;
 const equal = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 export function pocketDesign(pocket: CutoutPlacement): Partial<CutoutPlacement> {

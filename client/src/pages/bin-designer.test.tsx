@@ -3155,6 +3155,36 @@ describe("BinDesignerPage", () => {
     unmount();
   });
 
+  it("edits ramp-following access and a chamfer through the property controls and undo", async () => {
+    const shape = rectangularShape("ramp-tool", "Ramp tool");
+    const pocket = parseCutoutPlacement({ id: "ramp", shapeId: shape.id, position: { x: 0, y: 0 },
+      depth: { mode: "mm", value: 10 }, bottomFilletMm: 0,
+      depthProfile: { axis: "x", stations: [{ atMm: 0, depthMm: 10, transition: "smooth" }, { atMm: 30, depthMm: 3 }] } });
+    vi.mocked(ProjectPersistence.loadProjectDoc).mockResolvedValue({ ...EMPTY_PROJECT, shapes: [shape], cutouts: [pocket],
+      fingerHoles: [fingerHoleSchema.parse({ id: "access-ramp", center: { x: 0, y: 10 }, diameterMm: 18, depthMm: 3 })] });
+    const { container, unmount } = renderPage();
+    await flushHydration();
+    openSettingsSection(container, "finger-holes");
+    React.act(() => container.querySelector<HTMLButtonElement>('[data-testid="button-select-finger-hole-access-ramp"]')!.click());
+    const current = () => vi.mocked(useBinGeometry).mock.lastCall?.[2]?.fingerHoles?.[0];
+    React.act(() => container.querySelector<HTMLButtonElement>('[aria-label="Follow nearest ramp"]')!.click());
+    expect(current()?.depthMode).toBe("nearest-profile");
+    expect(container.querySelector('[aria-label="Minimum depth in millimetres"]')).not.toBeNull();
+    expect(container.querySelector('#finger-access-properties')?.textContent).toContain("Ramp tool:");
+    const field = container.querySelector<HTMLInputElement>('[aria-label="Top chamfer in millimetres"]')!;
+    React.act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(field, "0.5");
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    React.act(() => field.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+    expect(current()?.topChamferMm).toBe(.5);
+    expect(current()?.topFilletMm).toBe(0);
+    React.act(() => container.querySelector<HTMLButtonElement>('[data-testid="button-bin-undo"]')!.click());
+    expect(current()?.topChamferMm ?? 0).toBe(0);
+    expect(current()?.depthMode).toBe("nearest-profile");
+    unmount();
+  });
+
   it("groups finger access like pockets and supports renaming, undo, and cancellation", async () => {
     vi.mocked(ProjectPersistence.loadProjectDoc).mockResolvedValue({
       ...EMPTY_PROJECT,

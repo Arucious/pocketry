@@ -11,6 +11,7 @@ import {
   effectiveDeepScoopDepthMm,
   effectiveFingerHoleDepthMm,
   effectiveFingerHoleTopFilletMm,
+  effectiveFingerHoleTopChamferMm,
   effectiveFingerHoleBottomFilletMm,
   effectiveFingerHoleCornerRoundMm,
   flatEndedScoopRadiusMm,
@@ -46,7 +47,8 @@ import type { BuildQuality } from "./bin";
 import { buildProfileBottomCutout } from "./profile-bottom";
 import { depthProfileMask } from "./depth-profile-cutter";
 import { maximumProfileDepth, minimumProfileDepth } from "@shared/gridfinity/depth-profile";
-import { buildRoundedFingerAccessCutter } from "./finger-access-rounding";
+import { buildRoundedFingerAccessCutter, buildChamferedFingerAccessCutter } from "./finger-access-rounding";
+import { resolveFingerAccessDepth } from "@shared/gridfinity/finger-access-depth";
 import {
   bottomFilletCutter,
   FILLET_PROFILE_STEP_MM,
@@ -377,6 +379,7 @@ export function buildFingerHoleCutters(
   fingerHoles: readonly FingerHole[],
   spec: BinSpec,
   quality: BuildQuality,
+  layout?: { cutouts: readonly CutoutPlacement[]; shapesById: ReadonlyMap<string, TracedShape> },
 ): Manifold[] {
   const { arena } = kernel;
   const cutters: Manifold[] = [];
@@ -384,21 +387,49 @@ export function buildFingerHoleCutters(
     quality.filletProfileStepMm ?? FILLET_PROFILE_STEP_MM;
 
   for (const hole of fingerHoles) {
+    const followed = resolveFingerAccessDepth(spec, hole, layout?.cutouts ?? [], layout?.shapesById ?? new Map());
+    if (followed.error) throw new Error(followed.error);
+    if (followed.match) {
+      const { cutout, shape, profileTopZ, paddingMm } = followed.match;
+      const pocket = resolvePocketDepth(spec, { mode: "mm", value: followed.maximumDepthMm });
+      // Resolve the floor before adding its one entry flare. Two identical
+      // flares clipped by different floors can leave sub-Float32 seam edges.
+      const plain = { ...hole, depthMode: "fixed" as const, bottomFilletMm: 0, topFilletMm: 0, topChamferMm: 0 };
+      const full = buildFingerHoleCutters(kernel, [{ ...plain, depthMm: followed.maximumDepthMm }], spec, quality)[0];
+      const mask = depthProfileMask(kernel, shape, cutout, profileTopZ, pocket.cutterTopZ + 1, 0, paddingMm);
+      const matching = arena.track(full.intersect(mask));
+      const minimum = buildFingerHoleCutters(kernel, [plain], spec, quality)[0];
+      let cutter = arena.track(matching.add(minimum));
+      const segments = fingerHoleCircularSegments(hole, quality.circularSegments,
+        quality.fingerHoleChordToleranceMm ?? FINGER_HOLE_PREVIEW_CHORD_TOLERANCE_MM);
+      const chamfer = effectiveFingerHoleTopChamferMm(hole), round = effectiveFingerHoleTopFilletMm(hole);
+      if (chamfer > 0) cutter = arena.track(cutter.add(buildChamferedFingerAccessCutter(
+        kernel, hole, pocket.infillTopZ, pocket.cutterTopZ, chamfer, segments)));
+      else if (round > 0) cutter = arena.track(cutter.add(buildRoundedFingerAccessCutter(
+        kernel, hole, pocket.infillTopZ, pocket.cutterTopZ,
+        { radiusMm: round, profileStepMm: filletProfileStepMm, circularSegments: segments })));
+      cutters.push(cutter);
+      continue;
+    }
     const segments = fingerHoleCircularSegments(hole, quality.circularSegments,
       quality.fingerHoleChordToleranceMm ?? FINGER_HOLE_PREVIEW_CHORD_TOLERANCE_MM);
     const pocket = resolvePocketDepth(spec, { mode: "mm", value: hole.depthMm });
     const cutDepth = effectiveFingerHoleDepthMm(hole);
     const effectiveTopFillet = effectiveFingerHoleTopFilletMm(hole);
+    const effectiveChamfer = effectiveFingerHoleTopChamferMm(hole);
     // Sample shallow curved bottoms directly so even a 1 mm cut preserves
     // its mouth width and exact depth, with or without top-edge rounding.
     const shallowCurved = hole.kind !== "flat-ended-scoop" && cutDepth < hole.diameterMm / 2;
     if (!hasFlatFingerHoleBottom(hole) &&
         (effectiveTopFillet > 0 || shallowCurved || effectiveFingerHoleCornerRoundMm(hole) > 0)) {
-      cutters.push(buildRoundedFingerAccessCutter(kernel, hole, pocket.infillTopZ, pocket.cutterTopZ, {
+      let rounded = buildRoundedFingerAccessCutter(kernel, hole, pocket.infillTopZ, pocket.cutterTopZ, {
         radiusMm: effectiveTopFillet,
         profileStepMm: filletProfileStepMm,
         circularSegments: segments,
-      }));
+      });
+      if (effectiveChamfer > 0) rounded = arena.track(rounded.add(buildChamferedFingerAccessCutter(
+        kernel, hole, pocket.infillTopZ, pocket.cutterTopZ, effectiveChamfer, segments)));
+      cutters.push(rounded);
       continue;
     }
     const ring = fingerHoleFootprintRing(
@@ -461,6 +492,8 @@ export function buildFingerHoleCutters(
       });
       cutter = arena.track(cutter.add(topRound));
     }
+    if (effectiveChamfer > 0) cutter = arena.track(cutter.add(buildChamferedFingerAccessCutter(
+      kernel, hole, pocket.infillTopZ, pocket.cutterTopZ, effectiveChamfer, segments)));
     cutters.push(cutter);
   }
   return cutters;

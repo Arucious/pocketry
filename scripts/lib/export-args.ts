@@ -10,6 +10,7 @@ export const EXPORT_USAGE = `Usage:
 SVG options: --svg-width MM, --clearance MM, --depth-clearance MM,
   --stacking-clearance MM, --floor MM, --rotation DEGREES, --no-auto-rotate,
   --finger-diameter MM, --finger-extension MM, --finger-depth MM,
+  --finger-follow-ramp, --finger-chamfer MM,
   --finger-center X,Y (repeat for custom positions in bin-local mm, y-up).
   --depth-profile FILE (JSON with axis and stations), or --depth-axis x|y
   --depth-station POSITION:DEPTH[:step|linear|smooth] (repeat, starting at 0).
@@ -104,6 +105,10 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
       const access = options.svgOptions.fingerAccess;
       options.svgOptions.fingerAccess = { ...access, centers: [...(access?.centers ?? []), center] };
       svgOnly.add(arg);
+    } else if (arg === "--finger-follow-ramp") {
+      options.svgOptions.fingerAccess = { ...options.svgOptions.fingerAccess, depthMode: "nearest-profile" }; svgOnly.add(arg);
+    } else if (arg === "--finger-chamfer") {
+      options.svgOptions.fingerAccess = { ...options.svgOptions.fingerAccess, topChamferMm: numberValue(value(), arg) }; svgOnly.add(arg);
     } else if (arg.startsWith("--finger-")) {
       const key = { "--finger-diameter": "diameterMm", "--finger-extension": "extensionMm", "--finger-depth": "depthMm" }[arg] as "diameterMm" | "extensionMm" | "depthMm" | undefined;
       if (!key) throw new Error(`Unknown argument: ${arg}`);

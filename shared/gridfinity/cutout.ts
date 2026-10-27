@@ -187,6 +187,10 @@ export const fingerHoleSchema = z
     depthMm: z.number().min(1).max(120).default(12),
     /** Rounds the hole wall outward into the bin's top surface. */
     topFilletMm: z.number().min(0).max(5).default(0),
+    /** Optional 45-degree entry bevel, replacing the top round when nonzero. */
+    topChamferMm: z.number().finite().min(0).max(5).optional(),
+    /** Extend the access floor along the nearest profiled pocket when it is deeper. */
+    depthMode: z.enum(["fixed", "nearest-profile"]).optional(),
     /** Used by flat bottoms; retained while a curved bottom is selected. */
     bottomFilletMm: z.number().min(0).max(6).default(0),
     /** Plan-view corner radius for flat-ended slots; absent means sharp corners. */
@@ -351,7 +355,12 @@ export function effectiveFingerHoleDepthMm(hole: FingerHole): number {
 }
 
 export function effectiveFingerHoleTopFilletMm(hole: FingerHole): number {
+  if ((hole.topChamferMm ?? 0) > 0) return 0;
   return Math.min(hole.topFilletMm, effectiveFingerHoleDepthMm(hole) / 2);
+}
+
+export function effectiveFingerHoleTopChamferMm(hole: FingerHole): number {
+  return Math.min(hole.topChamferMm ?? 0, effectiveFingerHoleDepthMm(hole) / 2);
 }
 
 export function effectiveFingerHoleBottomFilletMm(hole: FingerHole): number {

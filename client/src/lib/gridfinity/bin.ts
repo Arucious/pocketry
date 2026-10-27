@@ -243,7 +243,7 @@ export function buildBinWithCutouts(
     validationIssues = [
       ...(builtCutouts.validationIssues ?? []),
       ...validateLayout(spec, layout.cutouts, layout.shapesById, layout.fingerHoles)
-        .filter(issue => issue.code === "invalid-pocket-insertion"),
+        .filter(issue => ["invalid-pocket-insertion", "invalid-finger-depth-profile", "finger-hole-in-base"].includes(issue.code)),
       ...validateTiltedSolids(kernel, spec, layout.cutouts, layout.shapesById, builtCutouts.cutterGroups ?? [], base.parts.wall, base.parts.lip),
     ];
     floorInserts = builtCutouts.floorInserts;
@@ -251,7 +251,7 @@ export function buildBinWithCutouts(
     reports = builtCutouts.reports;
     const allCutters = [
       ...builtCutouts.cutters,
-      ...buildFingerHoleCutters(kernel, layout.fingerHoles, spec, quality),
+      ...buildFingerHoleCutters(kernel, layout.fingerHoles, spec, quality, layout),
     ];
     if (allCutters.length > 0) {
       const cutter =

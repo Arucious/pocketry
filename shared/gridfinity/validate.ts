@@ -1,6 +1,7 @@
 import { hasPocketTilt, pocketAxis } from "./pocket-orientation";
 import { hasRigidPocket } from "./rigid-pocket";
 import { depthProfileError } from "./depth-profile";
+import { resolveFingerAccessDepth } from "./finger-access-depth";
 import { pocketInsertionError } from "./pocket-insertion";
 import {
   distanceToSegment,
@@ -391,7 +392,7 @@ export function validateLayout(
   }
 
   for (const [index, hole] of fingerHoles.entries()) {
-    issues.push(...validateFingerHoleAgainstBin(spec, hole, index));
+    issues.push(...validateFingerHoleAgainstBin(spec, hole, index, cutouts, shapesById));
   }
 
   // A pocket mouth under the label tab: legal geometry, but the tab shadows
@@ -573,6 +574,8 @@ function validateFingerHoleAgainstBin(
   spec: BinSpec,
   hole: FingerHole,
   index: number,
+  cutouts: readonly CutoutPlacement[],
+  shapesById: ReadonlyMap<string, TracedShape>,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const label = `Finger access ${index + 1}`;
@@ -582,7 +585,7 @@ function validateFingerHoleAgainstBin(
   );
   const bounds = ringBounds(ring);
   if (!bounds) return issues;
-  const topAllowanceMm = hole.topFilletMm;
+  const topAllowanceMm = Math.max(hole.topFilletMm, hole.topChamferMm ?? 0);
 
   const halfW = binFootprintMm(spec.gridX, spec.gridPitch) / 2;
   const halfL = binFootprintMm(spec.gridY, spec.gridPitch) / 2;
@@ -633,9 +636,10 @@ function validateFingerHoleAgainstBin(
     });
   }
 
-  const surface = resolvePocketDepth(spec, { mode: "mm", value: hole.depthMm });
-  const cutDepth = effectiveFingerHoleDepthMm(hole);
-  const bottomZ = surface.infillTopZ - cutDepth;
+  const followed = resolveFingerAccessDepth(spec, hole, cutouts, shapesById);
+  if (followed.error) issues.push({ code: "invalid-finger-depth-profile", severity: "error",
+    fingerHoleIds: [hole.id], message: `${label}: ${followed.error}` });
+  const bottomZ = followed.floorZ;
   if (bottomZ < 0) {
     issues.push({
       code: "finger-hole-too-deep",
@@ -650,6 +654,11 @@ function validateFingerHoleAgainstBin(
       fingerHoleIds: [hole.id],
       message: `${label} leaves a ${bottomZ.toFixed(1)} mm floor — likely to flex or delaminate.`,
     });
+  }
+  if (hole.depthMode === "nearest-profile" && bottomZ < (spec.flatBottom ? MIN_FLOOR_MM : BASE_HEIGHT) - 1e-6) {
+    issues.push({ code: "finger-hole-in-base", severity: "error", fingerHoleIds: [hole.id],
+      message: `${label}: Following the ramp leaves ${bottomZ.toFixed(2)} mm below the cut. ` +
+        `Keep at least ${spec.flatBottom ? MIN_FLOOR_MM : BASE_HEIGHT} mm to protect the ${spec.flatBottom ? "floor" : "Gridfinity base"}.` });
   }
   return issues;
 }

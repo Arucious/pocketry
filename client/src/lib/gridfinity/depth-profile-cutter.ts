@@ -8,13 +8,13 @@ import type { Kernel } from "../manifold/runtime";
  * silhouette cutter preserves concavities, holes, offsets and one continuous
  * opening. Sharp transitions are vertical faces; ramps are actual geometry. */
 export function depthProfileMask(kernel: Kernel, shape: TracedShape, cutout: CutoutPlacement,
-  topZ: number, ceilingZ: number, floorShiftMm = 0): Manifold {
+  topZ: number, ceilingZ: number, floorShiftMm = 0, paddingMm = 20): Manifold {
   const profile = cutout.depthProfile!;
   const error = depthProfileError(profile, shape.outlineMm);
   if (error) throw new Error(error);
   const { min, length } = profileAxisBounds(shape.outlineMm, profile.axis);
   const segments = depthProfileSegments(profile, length);
-  const pad = 20 / Math.min(cutout.scaleX, cutout.scaleY);
+  const pad = paddingMm / Math.min(cutout.scaleX, cutout.scaleY);
   const points = [{ x: min - pad, y: topZ - segments[0].fromDepthMm + floorShiftMm }];
   for (const segment of segments) {
     points.push({ x: min + segment.fromMm, y: topZ - segment.fromDepthMm + floorShiftMm },

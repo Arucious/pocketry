@@ -99,3 +99,22 @@ object as `options.depthProfile`, alongside `objectDepthMm`. Their shared schema
 validates stations before planning. The returned summary reports the actual
 profile including depth clearance. `pocketry_export_project` reads profiles from
 saved projects; no separate geometry implementation is used.
+
+## Finger access at a ramp
+
+Enable **Follow nearest ramp** in a flat-bottom finger access feature. Its floor
+follows the closest profiled pocket across the opening instead of leaving a
+constant-height ledge. The requested depth is a minimum: a deeper ramp extends
+the cut. The reported range and floor check include the entire opening, its
+placement, scaling and the pocket's vertical offset. Tilted pockets, missing
+profiles and distant openings are rejected. Curved access bottoms must first
+be changed to flat bottoms.
+
+**Top chamfer** adds a continuous 45° entry bevel and replaces top-edge rounding.
+Ramp-following cuts must retain the entire 7 mm Gridfinity base, or at least
+1.2 mm on a flat-bottom bin; unsafe exports are blocked rather than clipped.
+Existing fixed-depth finger access remains unchanged.
+
+CLI SVG planning accepts `--finger-follow-ramp --finger-chamfer 0.5` alongside a
+depth profile. MCP uses `options.fingerAccess.depthMode: "nearest-profile"` and
+`topChamferMm`. Both settings also round-trip in editable projects and history.

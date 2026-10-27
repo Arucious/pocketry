@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { useSelectionInspector } from "./selection-inspector-context";
 import { useExperimentalFeatures } from "@/state/experimental-features";
 import { hasPocketTilt } from "@shared/gridfinity/pocket-orientation";
+import { resolveFingerAccessDepth } from "@shared/gridfinity/finger-access-depth";
 import {
   Box,
   ChevronDown,
@@ -60,6 +61,7 @@ import {
   isElongatedFingerHole,
   effectiveFingerHoleDepthMm,
   effectiveFingerHoleTopFilletMm,
+  effectiveFingerHoleTopChamferMm,
   effectiveFingerHoleBottomFilletMm,
   minimumFingerHoleLengthMm,
   maximumFingerHoleBottomFilletMm,
@@ -1079,8 +1081,19 @@ export function BinControlsPanel({
                 )}
 
                 <section className="space-y-2" aria-label="Finger access depth">
+                  <FeatureSwitch label="Follow nearest ramp"
+                    description="Match a deeper pocket floor across the opening. The depth below is a minimum; the Gridfinity base stays protected."
+                    checked={selectedFingerHole.depthMode === "nearest-profile"}
+                    onChange={(enabled) => dispatch({ type: "UPDATE_FINGER_HOLE", id: selectedFingerHole.id,
+                      patch: { ...(enabled ? fingerAccessOptionsPatch(selectedFingerHole, { bottom: "flat" }) : {}),
+                        depthMode: enabled ? "nearest-profile" : "fixed" }, historyLabel: "Change finger access floor" })} />
+                  {selectedFingerHole.depthMode === "nearest-profile" && (() => {
+                    const resolved = resolveFingerAccessDepth(spec, selectedFingerHole, cutouts, shapesById);
+                    return <p className="text-xs text-muted-foreground" role="status">{resolved.error ??
+                      `${pocketName(resolved.match!.cutout, resolved.match!.shape)}: ${resolved.minimumDepthMm.toFixed(1)}–${resolved.maximumDepthMm.toFixed(1)} mm deep; ${resolved.floorZ.toFixed(1)} mm below the deepest cut.`}</p>;
+                  })()}
                   <MmSlider
-                    label="Depth"
+                    label={selectedFingerHole.depthMode === "nearest-profile" ? "Minimum depth" : "Depth"}
                     hint="New access starts 1 mm above the highest pocket floor, including split sections. Without a pocket floor, it starts at 12 mm. Depth is limited to 1 mm minimum and the bin height."
                     value={effectiveFingerHoleDepthMm(selectedFingerHole)}
                     min={1}
@@ -1190,6 +1203,15 @@ export function BinControlsPanel({
                   </>
                 )}
                 <MmSlider
+                  label="Top chamfer"
+                  value={effectiveFingerHoleTopChamferMm(selectedFingerHole)}
+                  min={0} max={Math.min(5, effectiveFingerHoleDepthMm(selectedFingerHole) / 2)} step={0.1}
+                  onChange={(topChamferMm, transient) => dispatch({ type: "UPDATE_FINGER_HOLE", id: selectedFingerHole.id,
+                    patch: { topChamferMm, ...(topChamferMm > 0 ? { topFilletMm: 0 } : {}) }, transient,
+                    historyLabel: "Chamfer finger access" })}
+                  hint="A continuous 45° bevel around the opening. Replaces top-edge rounding."
+                />
+                <MmSlider
                   label="Top edge round"
                   value={effectiveFingerHoleTopFilletMm(selectedFingerHole)}
                   min={0}
@@ -1199,7 +1221,7 @@ export function BinControlsPanel({
                     dispatch({
                       type: "UPDATE_FINGER_HOLE",
                       id: selectedFingerHole.id,
-                      patch: { topFilletMm },
+                      patch: { topFilletMm, ...(topFilletMm > 0 ? { topChamferMm: 0 } : {}) },
                       historyLabel: "Change finger access top edge round",
                       transient,
                     })
@@ -1212,7 +1234,7 @@ export function BinControlsPanel({
                   </p>
                 )}
 
-                {hasFlatFingerHoleBottom(selectedFingerHole) && (
+                {hasFlatFingerHoleBottom(selectedFingerHole) && selectedFingerHole.depthMode !== "nearest-profile" && (
                   <>
                   <MmSlider
                     label="Bottom edge round"

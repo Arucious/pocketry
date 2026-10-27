@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { depthProfileSchema, depthProfileError, maximumProfileDepth, type DepthProfile } from "./depth-profile";
+import { depthProfileSchema, depthProfileError, maximumProfileDepth, minimumProfileDepth, type DepthProfile } from "./depth-profile";
 
 import { minAreaObb } from "../geometry/obb";
 import { distanceToSegment, pointInRing, ringBounds, signedArea } from "../geometry/rings";
@@ -40,6 +40,8 @@ export const svgFingerAccessOptionsSchema = z.object({
   extensionMm: z.number().finite().positive().max(80).default(4),
   /** Depth below the pocket deck, leaving at least the pocket's floor. */
   depthMm: z.number().finite().min(1).max(120).optional(),
+  depthMode: z.enum(["fixed", "nearest-profile"]).optional(),
+  topChamferMm: z.number().finite().min(0).max(5).optional(),
   /** Custom centres are bin-local, y-up millimetres and are never translated. */
   centers: z.array(pointSchema).min(1).max(32).optional(),
 }).strict().superRefine((access, context) => {
@@ -73,6 +75,8 @@ export const svgBinOptionsSchema = z.object({
   lip: z.enum(["standard", "none"]).default("standard"),
   name: z.string().trim().min(1).max(80).optional(),
 }).strict().superRefine((options, context) => {
+  if (options.fingerAccess.depthMode === "nearest-profile" && !options.depthProfile) context.addIssue({
+    code: z.ZodIssueCode.custom, path: ["fingerAccess", "depthMode"], message: "Following a ramp requires a depth profile." });
   if (options.depthProfile && maximumProfileDepth(options.depthProfile) + options.depthClearanceMm > 280) context.addIssue({
     code: z.ZodIssueCode.custom, path: ["depthProfile"], message: "Depth stations including clearance must be at most 280 mm deep." });
   if (options.depthProfile && maximumProfileDepth(options.depthProfile) > options.objectDepthMm) context.addIssue({
@@ -259,7 +263,8 @@ export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgB
   const depthProfile = options.depthProfile ? { ...options.depthProfile, stations: options.depthProfile.stations.map(s => ({ ...s, depthMm: s.depthMm + options.depthClearanceMm })) } : undefined;
   const diameter = options.fingerAccess.diameterMm;
   const radius = diameter / 2;
-  const requestedDepth = options.fingerAccess.depthMm ?? Math.min(120, Math.max(1, pocketDepth - 1));
+  const requestedDepth = options.fingerAccess.depthMm ?? (options.fingerAccess.depthMode === "nearest-profile" && depthProfile
+    ? Math.max(1, Math.min(120, minimumProfileDepth(depthProfile))) : Math.min(120, Math.max(1, pocketDepth - 1)));
   if (options.fingerAccess.placement !== "none" && requestedDepth > pocketDepth + EPSILON) {
     throw new Error("Finger access depth cannot extend below the pocket floor; shallow pockets may need finger access disabled.");
   }
@@ -293,7 +298,8 @@ export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgB
     const placedOutline = transformOutlinePlacement(shape.outlineMm, placement);
     if (centers.some(center => !connectedToPocket(placedOutline, center, radius + options.clearanceMm))) continue;
     const holes = centers.map((center, index) => fingerHoleSchema.parse({ id: `svg-finger-${index + 1}`, center,
-      diameterMm: diameter, kind: "straight", depthMm: requestedDepth, topFilletMm: 0, bottomFilletMm: 0 }));
+      diameterMm: diameter, kind: "straight", depthMm: requestedDepth, depthMode: options.fingerAccess.depthMode,
+      topChamferMm: options.fingerAccess.topChamferMm, topFilletMm: 0, bottomFilletMm: 0 }));
     const finalBox = outlineBounds(placedOutline);
     const spanX = 2 * Math.max(Math.abs(finalBox.minX) + options.clearanceMm, Math.abs(finalBox.maxX) + options.clearanceMm,
       ...centers.map(center => Math.abs(center.x) + radius));

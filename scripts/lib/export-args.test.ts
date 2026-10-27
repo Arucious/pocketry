@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { parseExportArgs } from "./export-args";
 
 describe("export CLI arguments", () => {
+  it("exposes conforming access floors and entry bevels", () => {
+    const args = parseExportArgs(["--svg", "s.svg", "--object-depth", "12", "--depth-profile", "p.json",
+      "--finger-follow-ramp", "--finger-chamfer", "0.5"]);
+    expect(args.svgOptions.fingerAccess).toEqual({ depthMode: "nearest-profile", topChamferMm: .5 });
+    expect(() => parseExportArgs(["--finger-follow-ramp"])).toThrow("require --svg");
+  });
   it("parses multiple outgoing depth transitions in source millimetres", () => {
     const args = parseExportArgs(["--svg", "tool.svg", "--object-depth", "12", "--depth-axis", "y",
       "--depth-station", "0:11", "--depth-station", "40:11:smooth", "--depth-station", "60:4:linear", "--depth-station", "80:3"]);
