@@ -1,0 +1,6 @@
+# These source artifacts have pinned SHA-256 records. Keep their bytes identical
+# on Windows and Unix; checkout line-ending conversion invalidates the records.
+samples/**/*.json text eol=lf
+samples/*.json text eol=lf
+samples/**/*.svg text eol=lf
+shared/gridfinity/fixtures/*.json text eol=lf

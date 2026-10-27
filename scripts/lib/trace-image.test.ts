@@ -90,11 +90,18 @@ describe("local calibrated image tracing", () => {
     await expect(traceImageToSvg(path, path, { calibration }, true)).rejects.toThrow("differ");
   });
 
-  it.each(["symlink", "hardlink"] as const)("preserves the source photo when overwrite targets a %s alias", async (kind) => {
+  it.for(["symlink", "hardlink"] as const)("preserves the source photo when overwrite targets a %s alias", async (kind, context) => {
     const { path, directory } = await fixture();
     const before = await readFile(path);
     const alias = join(directory, "alias.svg");
-    await (kind === "symlink" ? symlink(path, alias) : link(path, alias));
+    try {
+      await (kind === "symlink" ? symlink(path, alias) : link(path, alias));
+    } catch (error) {
+      if (kind === "symlink" && process.platform === "win32" && (error as NodeJS.ErrnoException).code === "EPERM") {
+        context.skip("Windows symlink privilege is unavailable; source-alias protection still runs for hardlinks.");
+      }
+      throw error;
+    }
     await expect(traceImageToSvg(path, alias, { calibration }, true)).rejects.toThrow(kind === "symlink" ? "symbolic link" : "alias");
     expect(await readFile(path)).toEqual(before);
     expect(await readFile(alias)).toEqual(before);
