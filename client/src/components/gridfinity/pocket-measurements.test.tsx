@@ -49,6 +49,16 @@ function enter(label: string, value: string) {
 }
 
 describe("pocket measurements", () => {
+  it("keeps 3D inspection available for depth profiles without showing a flat-floor diagram", () => {
+    React.act(() => store.dispatch({ type: "UPDATE_CUTOUT", id: "pocket", patch: {
+      depthProfile: { axis: "x", stations: [{ atMm: 0, depthMm: 12, transition: "smooth" },
+        { atMm: 40, depthMm: 4, transition: "step" }] }, bottomFilletMm: 0,
+    } }));
+    expect(host.querySelector('[data-testid="pocket-depth-summary"]')?.textContent).toContain("Depth & inspection");
+    expect(host.querySelector('svg[aria-label^="Cross-section: pocket depth"]')).toBeNull();
+    React.act(() => host.querySelector<HTMLButtonElement>('[data-testid="button-inspect-pocket"]')!.click());
+    expect(inspect).toHaveBeenCalled();
+  });
   it("enables clearance on tilt and preserves direction or disabling through subsequent edits and undo", () => {
     expect(host.querySelector('[data-testid="pocket-insertion-controls"]')).toBeNull();
     enter("Pocket X rotation in degrees", "30");

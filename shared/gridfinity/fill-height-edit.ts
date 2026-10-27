@@ -33,6 +33,7 @@ export function adjustPocketsForFillHeight(
     const reference = cutout.fillHeightReference ?? {
       topZ: infillTopZ(previous), position: cutout.position, depth: cutout.depth,
       ...(cutout.split ? { splitDepths: cutout.split.depths } : {}),
+      ...(cutout.depthProfile ? { depthProfile: cutout.depthProfile } : {}),
     };
     const axis = pocketAxis(cutout);
     if (enabled && axis.z < 0.01) return { error: "Reduce pocket tilt before adjusting fixed pocket depths." };
@@ -40,6 +41,9 @@ export function adjustPocketsForFillHeight(
     const resize = (depth: DepthSpec): DepthSpec => depth.mode === "mm"
       ? { mode: "mm", value: depth.value + axialDelta } : depth;
     const depth = resize(reference.depth);
+    const profile = reference.depthProfile ?? cutout.depthProfile;
+    const depthProfile = profile ? { ...profile, stations: profile.stations.map(s => ({ ...s, depthMm: s.depthMm + axialDelta })) } : undefined;
+    if (depthProfile?.stations.some(s => s.depthMm < 0.1 || s.depthMm > 280)) return { error: "This fill height moves a depth station outside 0.1–280 mm. Increase the fill height or disable fixed-depth adjustment." };
     const splitDepths = reference.splitDepths ?? cutout.split?.depths;
     const split = cutout.split && splitDepths ? { ...cutout.split,
       depths: [resize(splitDepths[0]), resize(splitDepths[1])] as [DepthSpec, DepthSpec],
@@ -47,7 +51,7 @@ export function adjustPocketsForFillHeight(
     if ([depth, ...(split?.depths ?? [])].some(d => d.mode === "mm" && d.value <= POCKET_DEPTH_EPSILON_MM)) {
       return { error: "This fill height would leave a fixed pocket with no depth. Increase the fill height or pocket depth, or uncheck Adjust fixed pocket depths." };
     }
-    adjusted.push({ ...cutout, depth, ...(split ? { split } : {}), fillHeightReference: { ...reference },
+    adjusted.push({ ...cutout, depth, ...(split ? { split } : {}), ...(depthProfile ? { depthProfile } : {}), fillHeightReference: { ...reference },
       // The mouth follows the same tilted shaft; its floor stays fixed in XY too.
       position: { x: reference.position.x + axis.x * axialDelta, y: reference.position.y + axis.y * axialDelta },
     });
@@ -78,7 +82,7 @@ export function reconcileFillHeightReferences(previous: BinDoc, next: BinDoc): B
     const before = previous.cutouts.find(c => c.id === cutout.id)
       ?? previous.cutouts.find(c => c.fillHeightReference === reference);
     if (!before || reference !== before.fillHeightReference) return cutout;
-    if (!same(cutout.depth, before.depth) || !same(cutout.split, before.split)
+    if (!same(cutout.depth, before.depth) || !same(cutout.split, before.split) || !same(cutout.depthProfile, before.depthProfile)
       || !same(cutout.tilt, before.tilt) || cutout.rotationDeg !== before.rotationDeg
       || (cutout.id === before.id && !same(cutout.designLink, before.designLink))) {
       if (cutout.designLink) resetLinks.add(cutout.designLink.id);

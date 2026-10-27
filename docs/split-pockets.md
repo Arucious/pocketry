@@ -1,5 +1,9 @@
 # Split pockets
 
+For more than two levels or ramped/smooth transitions, use
+[Depth stations](depth-stations.md). The two-section workflow below remains
+available for independently drawn boundaries.
+
 A tool can have a thin blade and a thick handle. Trace the complete silhouette,
 add it to the bin as one pocket, and select **Split pocket** beside its depth
 controls. In Layout, click two points on the outer edge or drag from edge to edge.

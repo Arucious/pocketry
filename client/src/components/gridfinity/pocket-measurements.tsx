@@ -193,7 +193,7 @@ export function PocketDepthSummary({ cutout, shape, section, inspect, children }
   return <div className="space-y-2">
     <details key={cutout.id} open className="group/depth text-xs" data-testid="pocket-depth-summary">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded py-2 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-        <span>{cutout.profileBottom ? "Bottom profile" : "Depth"}</span>
+        <span>{cutout.profileBottom ? "Bottom profile" : cutout.depthProfile ? "Depth & inspection" : "Depth"}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform group-open/depth:rotate-180" />
       </summary>
       {children}
@@ -203,7 +203,7 @@ export function PocketDepthSummary({ cutout, shape, section, inspect, children }
         {hasPocketTilt(cutout) && <p className="mt-1 text-muted-foreground">Along pocket axis: {pocket.axialDepthMm === null ? "through" : `${pocket.axialDepthMm.toFixed(1)} mm`} · Axis tilt: {(Math.acos(pocketAxis(cutout).z) * 180 / Math.PI).toFixed(1)}°</p>}
         {cutout.profileBottom && !hasProfileRotation(cutout) && <ProfileSectionPreview cutout={cutout} shape={shape} top={pocket.infillTopZ} />}
         {hasProfileRotation(cutout) && <p className="mt-1 text-muted-foreground">Rotated profile · Inspect in 3D to see the supporting contour.</p>}
-        {!cutout.profileBottom && !hasRigidPocket(cutout) && !hasPocketTilt(cutout) && <svg viewBox="0 0 240 65" className="mt-2 h-16 w-full" role="img" aria-label="Cross-section: pocket depth above remaining floor, with stacking rim above infill">
+        {!cutout.profileBottom && !cutout.depthProfile && !hasRigidPocket(cutout) && !hasPocketTilt(cutout) && <svg viewBox="0 0 240 65" className="mt-2 h-16 w-full" role="img" aria-label="Cross-section: pocket depth above remaining floor, with stacking rim above infill">
           <path d="M20 5 H40 V15 H200 V5 H220 V60 H20 Z" fill="currentColor" opacity="0.2" />
           <rect x="70" y="15" width="100" height={45 * Math.min(1, Math.max(0, (pocket.depthMm ?? pocket.infillTopZ) / pocket.infillTopZ))} fill="hsl(var(--background))" stroke="currentColor" />
           <text x="120" y="28" textAnchor="middle" fontSize="9" fill="currentColor">Pocket</text>

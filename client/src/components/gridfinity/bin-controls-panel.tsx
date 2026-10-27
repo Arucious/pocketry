@@ -159,6 +159,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SURFACE_FIT_CHECK_OUTLINE_WIDTH_MM, surfaceFitCheckStyleSchema, type SurfaceFitCheckStyle } from "@shared/gridfinity/fit-check";
 import { cn } from "@/lib/utils";
 import { PocketSplitControls } from "./pocket-split-controls";
+import { PocketDepthProfileControls } from "./pocket-depth-profile-controls";
 import { changeBinGridPitchPreservingSize } from "@shared/gridfinity/grid-pitch";
 import { PocketDepthSummary, PocketInsertionControls, PocketMeasurements, PocketSizeInputs, PositionInputs } from "./pocket-measurements";
 import { ExportConfirmationDialog, ProjectBackupOption } from "./export-confirmation-dialog";
@@ -886,7 +887,7 @@ export function BinControlsPanel({
 
               <PocketInsertionControls cutout={selectedCutout} shape={selectedShape} />
               {!inspector && <LinkedDesignControls kind="pocket" activeId={selectedCutout.id} labels={new Map(cutouts.map(c => [c.id, pocketName(c, shapesById.get(c.shapeId))]))} />}
-              <PocketDepthSummary cutout={depthCutout!} shape={depthShape!} section={section} inspect={inspectPocket}>
+              {!selectedCutout.depthProfile && <PocketDepthSummary cutout={depthCutout!} shape={depthShape!} section={section} inspect={inspectPocket}>
                 {selectedCutout.split && <div className="flex gap-1 pb-2" role="group" aria-label="Section to edit">
                   {([0, 1] as const).map(index => <Button key={index} type="button" size="sm"
                     className="flex-1" variant={selectedPocketSection === index ? "secondary" : "outline"}
@@ -944,7 +945,9 @@ export function BinControlsPanel({
                   {hasRigidPocket(selectedCutout) && depthCutout!.depth.mode === "through" && <p className="text-[11px] text-muted-foreground">Preserves the original shape. Z movement stops when the lowest point reaches the bin underside; raising it restores material.</p>}
                   {selectedCutout.split && <p className="text-[11px] text-muted-foreground">Depth applies to the selected section. Size and edges apply to the whole pocket.</p>}
                 </section>
-              </PocketDepthSummary>
+              </PocketDepthSummary>}
+              {!selectedCutout.profileBottom && <PocketDepthProfileControls key={selectedCutout.id} cutout={selectedCutout} shape={selectedShape} />}
+              {selectedCutout.depthProfile && <PocketDepthSummary cutout={selectedCutout} shape={selectedShape} section={section} inspect={inspectPocket} />}
               {!selectedCutout.profileBottom && <PocketSplitControls cutout={selectedCutout} />}
               <details className="group/size border-t pt-1 text-xs" aria-label="Pocket size and scale" data-testid="pocket-size-settings">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 py-2 font-medium [&::-webkit-details-marker]:hidden">
@@ -961,7 +964,7 @@ export function BinControlsPanel({
                 </summary>
                 <div className="space-y-3 pt-2" key={selectedCutout.id}>
                   {pocketTopRounding}
-                  <MmSlider
+                  {!selectedCutout.depthProfile && <MmSlider
                     label="Bottom edge fillet"
                     value={selectedCutout.bottomFilletMm}
                     min={0}
@@ -971,14 +974,14 @@ export function BinControlsPanel({
                       dispatch({
                         type: "UPDATE_CUTOUT",
                         id: selectedCutout.id,
-                        patch: { bottomFilletMm },
+                        patch: { bottomFilletMm: selectedCutout.depthProfile ? 0 : bottomFilletMm },
                         historyLabel: "Change bottom fillet",
                         transient,
                       })
                     }
                     hintAsTooltip
                     hint="Rounds the wall into the floor; the transition ends one radius above the floor."
-                  />
+                  />}
                   <MmSlider
                     label="Outline corner rounding"
                     value={selectedCutout.cornerRoundMm}

@@ -1,5 +1,6 @@
 import { hasPocketTilt, pocketAxis } from "./pocket-orientation";
 import { hasRigidPocket } from "./rigid-pocket";
+import { depthProfileError } from "./depth-profile";
 import { pocketInsertionError } from "./pocket-insertion";
 import {
   distanceToSegment,
@@ -326,6 +327,11 @@ export function validateLayout(
           `Re-trace with a calibration.`,
         cutoutIds: [cutout.id],
       });
+    }
+
+    if (cutout.depthProfile) {
+      const error = depthProfileError(cutout.depthProfile, shape.outlineMm);
+      if (error) issues.push({ code: "invalid-depth-profile", severity: "error", cutoutIds: [cutout.id], message: error });
     }
 
     const insertionError = pocketInsertionError(cutout);

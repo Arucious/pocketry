@@ -5,6 +5,7 @@ import { resolvePlacedPocketDepth, resolvePocketDepth, type CutoutPlacement, typ
 import { placeObjectCells, placeObjectVertices, rotateObjectVector, sectionObjectCell, type ConvexObjectCell, type ObjectRotation, type Vec3 } from "./object-pose";
 import { profileCells } from "./profile-bottom";
 import { resolvePocketSplit } from "./pocket-split";
+import { clipProfileCell, depthProfileSegments, maximumProfileDepth, profileAxisBounds, profileDepthAt } from "./depth-profile";
 import type { BinSpec } from "./types";
 import { pocketInsertionAxis } from "./pocket-insertion";
 
@@ -17,6 +18,8 @@ export const pocketRotation = (p: Pick<CutoutPlacement, "tilt" | "rotationDeg">)
  * each split seat uses its own outline when converting legacy floor clearance. */
 export function rigidPocket(p: CutoutPlacement, shape: Pick<TracedShape, "outlineMm">, spec: BinSpec): CutoutPlacement {
   const alreadyRigid = hasRigidPocket(p);
+  if (p.depthProfile) return alreadyRigid ? p : { ...p, zOffsetMm: undefined,
+    elevationMm: Math.max(0, resolvePocketDepth(spec, { mode: "mm", value: maximumProfileDepth(p.depthProfile) }).floorZ! + (p.zOffsetMm ?? 0)) };
   if (alreadyRigid && (p.split?.depths ?? [p.depth]).every(d => d.mode === "mm" || d.sourceDepthMm !== undefined)) return p;
   const regions = p.split ? resolvePocketSplit(shape.outlineMm, p.split.boundary).regions : null;
   const resolved = (p.split?.depths ?? [p.depth]).map((d, i) => resolvePlacedPocketDepth(spec, d,
@@ -44,6 +47,22 @@ function sourceRegions(outline: Outline, p: CutoutPlacement, top: number) {
 /** Boundary loops for the immediate drag preview and nominal rotation anchor.
  * Internal scan-line cells never participate in drawing the source outline. */
 export function pocketSourceRings(outline: Outline, p: CutoutPlacement, top = 0): Vec3[][] {
+  if (p.depthProfile) {
+    const profile = p.depthProfile, { min, length } = profileAxisBounds(outline, profile.axis);
+    const breaks = depthProfileSegments(profile, length).flatMap(s => [s.fromMm, s.toMm]);
+    return outline.flatMap(part => [part.outer, ...part.holes].flatMap(ring => {
+      const dense = ring.flatMap((a, i) => {
+        const b = ring[(i + 1) % ring.length], delta = b[profile.axis] - a[profile.axis];
+        const ts = Math.abs(delta) < 1e-9 ? [] : breaks.flatMap(value => {
+          const t = (min + value - a[profile.axis]) / delta;
+          return t > 1e-8 && t < 1 - 1e-8 ? [t] : [];
+        }).sort((x, y) => x - y);
+        return [a, ...ts.map(t => ({ x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) }))];
+      });
+      return [true, false].map(bottom => dense.map(v => ({ x: v.x * p.scaleX * (p.mirrored ? -1 : 1),
+        y: v.y * p.scaleY, z: bottom ? -profileDepthAt(profile, v[profile.axis] - min) : 0 })));
+    }));
+  }
   return sourceRegions(outline, p, top).flatMap(({ region, limits }) =>
     region.flatMap(part => [part.outer, ...part.holes].flatMap(ring => limits.map(z => ring.map(v => ({
       x: v.x * p.scaleX * (p.mirrored ? -1 : 1), y: v.y * p.scaleY, z,
@@ -57,6 +76,20 @@ export function rigidPocketVertices(outline: Outline, p: CutoutPlacement, top = 
 }
 
 export function pocketSourceCells(outline: Outline, p: CutoutPlacement, top = 0): ConvexObjectCell[] {
+  if (p.depthProfile) {
+    const profile = p.depthProfile, { min, length } = profileAxisBounds(outline, profile.axis);
+    return depthProfileSegments(profile, length).flatMap(segment => profileCells(outline).flatMap(cell => {
+      const ring = clipProfileCell(cell, profile.axis, min + segment.fromMm, min + segment.toMm);
+      if (!ring.length) return [];
+      const n = ring.length, edges: [number, number][] = [];
+      for (let j = 0; j < n; j++) edges.push([j, (j + 1) % n], [j + n, (j + 1) % n + n], [j, j + n]);
+      return [{ edges, vertices: [true, false].flatMap(bottom => ring.map(v => {
+        const t = Math.min(1, Math.max(0, (v[profile.axis] - min - segment.fromMm) / (segment.toMm - segment.fromMm)));
+        return { x: v.x * p.scaleX * (p.mirrored ? -1 : 1), y: v.y * p.scaleY,
+          z: bottom ? -(segment.fromDepthMm + t * (segment.toDepthMm - segment.fromDepthMm)) : 0 };
+      })) }];
+    }));
+  }
   return sourceRegions(outline, p, top).flatMap(({ region, limits }) => {
     return profileCells(region).map(ring => {
       const n = ring.length, edges: [number, number][] = [];

@@ -24,6 +24,7 @@ import {
   resolvePocketDepth,
   resolvePlacedPocketDepth,
   pocketName,
+  pocketDepths,
   transformOutlinePlacement,
   transformPointPlacement,
   type CutoutPlacement, type DepthSpec,
@@ -43,6 +44,8 @@ import type { Kernel } from "@/lib/manifold/runtime";
 
 import type { BuildQuality } from "./bin";
 import { buildProfileBottomCutout } from "./profile-bottom";
+import { depthProfileMask } from "./depth-profile-cutter";
+import { maximumProfileDepth, minimumProfileDepth } from "@shared/gridfinity/depth-profile";
 import { buildRoundedFingerAccessCutter } from "./finger-access-rounding";
 import {
   bottomFilletCutter,
@@ -475,7 +478,7 @@ function buildOrientedCutout(
   if (axis.z < 0.01) throw new Error("Reduce the combined pocket tilt so its axis can exit through the top.");
   const split = cutout.split ? resolvePocketSplit(shape.outlineMm, cutout.split.boundary) : null;
   if (split?.error) throw new Error(split.error);
-  const depths = cutout.split?.depths ?? [cutout.depth];
+  const depths = pocketDepths(cutout);
   const resolved = depths.map((depth, i) => resolvePlacedPocketDepth(spec, depth,
     { outlineMm: split?.regions?.[i] ?? shape.outlineMm }, cutout));
   if (resolved.some(p => p.axialDepthMm !== null && (p.axialDepthMm <= 0 || (p.highestFloorZ ?? 0) >= p.infillTopZ))) {
@@ -553,6 +556,27 @@ function buildCutoutCuttersInternal(
       cutters.push(...tilted.cutters);
       floorInserts.push(...tilted.floorInserts);
       reports.push(...tilted.reports);
+      continue;
+    }
+
+    if (cutout.depthProfile) {
+      const top = resolvePocketDepth(spec, cutout.depth).infillTopZ;
+      const maximum = maximumProfileDepth(cutout.depthProfile);
+      const thickness = Math.min(options.floorInsertThicknessMm ?? 0, Math.max(0, top - maximum));
+      const base = buildCutoutCutters(kernel, shapesById, [{ ...cutout, depthProfile: undefined,
+        depth: { mode: "mm", value: maximum + thickness }, bottomFilletMm: 0,
+        topFilletMm: Math.min(cutout.topFilletMm, minimumProfileDepth(cutout.depthProfile) / 2) }],
+      spec, quality, { ...options, floorInsertThicknessMm: 0 });
+      const ceiling = options.axialHeadroomMm === undefined ? resolvePocketDepth(spec, cutout.depth).cutterTopZ + 1 : top + options.axialHeadroomMm + 1;
+      const mask = depthProfileMask(kernel, shape, cutout, top, ceiling);
+      for (const full of base.cutters) {
+        cutters.push(arena.track(full.intersect(mask)));
+        if (thickness > 0) {
+          const lower = depthProfileMask(kernel, shape, cutout, top, ceiling, -thickness);
+          floorInserts.push(arena.track(arena.track(full.intersect(lower)).subtract(mask)));
+        }
+      }
+      reports.push(...base.reports);
       continue;
     }
 
@@ -714,7 +738,7 @@ export function buildRigidPocket(kernel: Kernel, shape: TracedShape, cutout: Cut
   if (pocketInsertionError(cutout)) return { cutters: [], floorInserts: [], floorRegions: [],
     reports: [{ id: cutout.id, emptied: false }] };
   const realTop = resolvePocketDepth(spec, cutout.depth).infillTopZ;
-  const depthSpecs = cutout.split?.depths ?? [cutout.depth];
+  const depthSpecs = pocketDepths(cutout);
   const dimensions = depthSpecs.map(d => d.mode === "mm" ? d.value
     : d.sourceDepthMm ?? (d.mode === "remaining" ? realTop-d.floorThicknessMm : realTop));
   const localSpec = { ...spec, lip: "none" as const, fillHeightPercent: 100,

@@ -13,6 +13,15 @@ const pockets: EditableObject[] = [10, 20].map((depth, i) => {
 const finger: EditableObject = { kind: "finger", hole: fingerHoleSchema.parse({ id: "f", center: { x: 0, y: 15 }, diameterMm: 10, depthMm: 8 }) };
 
 describe("selection property edits", () => {
+  it("sets every station in a selected depth profile while retaining positions and transitions", () => {
+    const first = pockets[0]; if (first.kind !== "pocket") throw new Error("Expected pocket");
+    const profile = { axis: "x" as const, stations: [{ atMm: 0, depthMm: 10, transition: "smooth" as const },
+      { atMm: 10, depthMm: 4, transition: "step" as const }] };
+    const object: EditableObject = { ...first, cutout: { ...first.cutout, depthProfile: profile, bottomFilletMm: 0 } };
+    expect(commonSelectionValue([object], "depth")).toBeNull();
+    const edited = selectionPropertyEdits([object], [objectRef(object)], "pocket", "depth", 8, spec).cutouts[0];
+    expect(edited.depthProfile).toEqual({ ...profile, stations: profile.stations.map(s => ({ ...s, depthMm: 8 })) });
+  });
   it.each(["depth", "topFilletMm", "clearanceMm"] as const)("does not silently edit dormant %s on a profile", property => {
     const source=pockets[0]; if(source.kind!=="pocket") throw new Error("Expected pocket");
     const profile={...source,cutout:{...source.cutout,profileBottom:{edge:"bottom" as const,widthMm:8,elevationMm:12},profileRotation:{xDeg:135,yDeg:45}}};

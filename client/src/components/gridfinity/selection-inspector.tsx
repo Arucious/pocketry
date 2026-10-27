@@ -142,6 +142,7 @@ export function SelectionInspector({ propertiesRef, transformsRef, settingsRef }
             key={`${JSON.stringify(bin.selection)}:${JSON.stringify(items)}:${property}`} objects={items} all={objects} kind={items[0].kind} property={property}
             label={property === "depth" ? "Fixed cut depth" : property === "topFilletMm" ? "Top rounding" : "Extra clearance"} />)}
           {items.some(o => o.kind === "pocket" && o.cutout.split) && <p className="text-xs text-muted-foreground">Setting depth updates both sections of selected split pockets.</p>}
+          {items.some(o => o.kind === "pocket" && o.cutout.depthProfile) && <p className="text-xs text-muted-foreground">Setting depth applies the same value to every station in selected depth profiles.</p>}
         </PropertySurface>)}
       </div>}
       <div ref={propertiesRef} className="p-3 empty:hidden" data-testid="inspector-properties" />

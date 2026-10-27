@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { hasPocketTilt, pocketAxis, pocketMouthBasis, rotatePocketVector } from "./pocket-orientation";
 import { profileAlongX, profileBottomSchema, profileFloorSegments, profileFootprint, profilePrisms, hasProfileRotation } from "./profile-bottom";
+import { depthProfileSchema, maximumProfileDepth } from "./depth-profile";
 import { objectRotationSchema } from "./object-pose";
 import { hasRigidPocket, rigidPocketFootprint, rigidPocketOccupiedFootprint } from "./rigid-pocket";
 
@@ -581,6 +582,7 @@ const cutoutPlacementInputSchema = z
       position: vec2Schema,
       depth: depthSpecSchema,
       splitDepths: z.tuple([depthSpecSchema, depthSpecSchema]).optional(),
+      depthProfile: depthProfileSchema.optional(),
     }).strict().optional(),
     /** Placement-local name; absent on older pockets that use the source name. */
     name: z.string().trim().min(1).optional(),
@@ -607,6 +609,7 @@ const cutoutPlacementInputSchema = z
       floorThicknessMm: BASE_HEIGHT,
     }),
     split: pocketSplitSchema.optional(),
+    depthProfile: depthProfileSchema.optional(),
     profileBottom: profileBottomSchema.optional(),
     /** Free X/Y rotation of a profile object, independent of ordinary pocket tilt. */
     profileRotation: objectRotationSchema.pick({ xDeg: true, yDeg: true }).optional(),
@@ -625,6 +628,12 @@ const cutoutPlacementInputSchema = z
   })
   .strict()
   .superRefine((pocket, context) => {
+    if (pocket.depthProfile && (pocket.split || pocket.profileBottom)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["depthProfile"], message: "Choose either depth stations, a two-section split, or a side-profile pocket." });
+    }
+    if (pocket.depthProfile && (pocket.depth.mode !== "mm" || pocket.bottomFilletMm !== 0)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["depthProfile"], message: "Depth stations require fixed depth and zero bottom-edge fillet. Use station transitions to shape the floor." });
+    }
     if (pocket.insertionMode && pocket.elevationMm === undefined) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["insertionMode"],
         message: "Insertion clearance requires a rigid pocket elevation." });
@@ -638,6 +647,7 @@ const cutoutPlacementInputSchema = z
  */
 export const cutoutPlacementSchema = cutoutPlacementInputSchema.transform(
   ({ scoop, ...placement }) => {
+    if (placement.depthProfile) placement.depth = { mode: "mm", value: maximumProfileDepth(placement.depthProfile) };
     if (!scoop) return placement;
     const ids = new Set(placement.fingerHoles.map((hole) => hole.id));
     let id = "legacy-scoop";
@@ -671,8 +681,9 @@ export function pocketName(
 }
 
 /** The original depth is retained for removing a split; only active depths cut. */
-export function pocketDepths(cutout: Pick<CutoutPlacement, "depth" | "split"> & Partial<Pick<CutoutPlacement, "profileBottom">>): readonly DepthSpec[] {
+export function pocketDepths(cutout: Pick<CutoutPlacement, "depth" | "split"> & Partial<Pick<CutoutPlacement, "profileBottom" | "depthProfile">>): readonly DepthSpec[] {
   if (cutout.profileBottom) return [{ mode: "remaining", floorThicknessMm: cutout.profileBottom.elevationMm }];
+  if (cutout.depthProfile) return cutout.depthProfile.stations.map(s => ({ mode: "mm", value: s.depthMm }));
   return cutout.split?.depths ?? [cutout.depth];
 }
 
@@ -696,7 +707,7 @@ export function parseCutoutPlacement(input: unknown): CutoutPlacement {
 export type PlacementTransform = Pick<
   CutoutPlacement,
   "position" | "rotationDeg" | "mirrored"
-> & Partial<Pick<CutoutPlacement, "scaleX" | "scaleY" | "tilt" | "zOffsetMm" | "profileBottom" | "profileRotation" | "elevationMm" | "depth" | "split" | "insertionMode">>;
+> & Partial<Pick<CutoutPlacement, "scaleX" | "scaleY" | "tilt" | "zOffsetMm" | "profileBottom" | "profileRotation" | "elevationMm" | "depth" | "split" | "depthProfile" | "insertionMode">>;
 
 /** Applies scale → mirror → rotate → translate to one shape-local point. */
 export function transformPointPlacement(
@@ -1252,6 +1263,10 @@ const floorAtUnderside = (z: number): number => Math.abs(z) < POCKET_DEPTH_EPSIL
 export function resolvePlacedPocketDepth(spec: Pick<BinSpec, "heightUnits" | "lip">, depth: DepthSpec, shape: Pick<TracedShape, "outlineMm">, cutout: CutoutPlacement): ResolvedPocket & { highestFloorZ: number | null; axialDepthMm: number | null } {
   const ordinary = resolvePocketDepth(spec, depth);
   if (hasRigidPocket(cutout)) {
+    if (cutout.depthProfile && depth.mode === "mm") {
+      const floorZ = cutout.elevationMm! + maximumProfileDepth(cutout.depthProfile) - depth.value;
+      return { ...ordinary, floorZ, highestFloorZ: floorZ, axialDepthMm: depth.value, depthMm: ordinary.infillTopZ - floorZ };
+    }
     if (depth.mode === "through") return { ...ordinary, floorZ: cutout.elevationMm!, highestFloorZ: cutout.elevationMm!,
       axialDepthMm: depth.sourceDepthMm ?? ordinary.infillTopZ, depthMm: Math.max(0, ordinary.infillTopZ-cutout.elevationMm!) };
     const floorZ = depth.mode === "remaining" ? Math.max(cutout.elevationMm!, depth.floorThicknessMm) : cutout.elevationMm!;

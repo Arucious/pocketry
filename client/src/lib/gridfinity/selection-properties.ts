@@ -37,7 +37,9 @@ export function selectionPropertyEdits(objects: readonly EditableObject[], selec
     if (object.kind === "pocket") {
       const depth: DepthSpec = { mode: "mm", value };
       edits.cutouts.push(parseCutoutPlacement({ ...object.cutout, ...(property === "depth"
-        ? { depth, ...(object.cutout.split ? { split: { ...object.cutout.split, depths: [depth, depth] } } : {}) }
+        ? { depth, ...(object.cutout.split ? { split: { ...object.cutout.split, depths: [depth, depth] } } : {}),
+          ...(object.cutout.depthProfile ? { depthProfile: { ...object.cutout.depthProfile,
+            stations: object.cutout.depthProfile.stations.map(s => ({ ...s, depthMm: value })) } } : {}) }
         : { [property]: value }) }));
     } else {
       if (property === "clearanceMm") throw new Error("Clearance applies to pockets only.");

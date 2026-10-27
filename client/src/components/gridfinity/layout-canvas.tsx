@@ -107,6 +107,7 @@ import {
   snapToToolContour,
 } from "@/lib/gridfinity/layout-measure";
 import { resolvePocketSplit, splitSide } from "@shared/gridfinity/pocket-split";
+import { profileAxisBounds } from "@shared/gridfinity/depth-profile";
 import { usePocketSplit } from "./use-pocket-split";
 import { useBasicPocket } from "./use-basic-pocket";
 import { AddPocketMenu } from "./add-pocket-menu";
@@ -1819,6 +1820,24 @@ function LayoutStage({ onEditPocket, onSelectSurfaceText, edgeBandColor, textPos
                   data-cutout-id={cutout.id}
                   strokeDasharray={overlappingCutouts.has(cutout.id) ? "5 3" : undefined}
                 ><title>{boundaryCutouts.has(cutout.id) ? "Boundary conflict. " : ""}{overlappingCutouts.has(cutout.id) ? "Overlapping pockets. " : ""}{pocketName(cutout, shapesById.get(cutout.shapeId))}</title></path>
+                {isSelected && cutout.depthProfile && !hasPocketTilt(cutout) && (() => {
+                  const profile = cutout.depthProfile;
+                  const axis = profileAxisBounds(shape.outlineMm, profile.axis);
+                  const other = profileAxisBounds(shape.outlineMm, profile.axis === "x" ? "y" : "x");
+                  const clipId = `${sceneId}-stations-${cutout.id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+                  return <g className="pointer-events-none" data-testid={`depth-stations-${cutout.id}`}>
+                    <defs><clipPath id={clipId}><path d={outlineToCanvasPath(outline, spec)} fillRule="evenodd" clipRule="evenodd" /></clipPath></defs>
+                    <g clipPath={`url(#${clipId})`}>{profile.stations.slice(1).map((station, i) => {
+                      const at = axis.min + station.atMm;
+                      const points = [other.min - 1, other.max + 1].map(v => profile.axis === "x" ? { x: at, y: v } : { x: v, y: at })
+                        .map(p => binToCanvas(transformPointPlacement(p, cutout), spec));
+                      return <path key={i} d={`M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`}
+                        className="stroke-primary" strokeWidth={1.2} strokeDasharray="4 3" vectorEffect="non-scaling-stroke">
+                        <title>Station {i + 2}: {station.atMm.toFixed(1)} mm, depth {station.depthMm.toFixed(1)} mm</title>
+                      </path>;
+                    })}</g>
+                  </g>;
+                })()}
                 {cutout.split && !cutout.profileBottom && !hasPocketTilt(cutout) && (() => {
                   const split = resolvePocketSplit(shape.outlineMm, cutout.split.boundary);
                   const boundary = (split.boundary ?? cutout.split.boundary).map(p => binToCanvas(transformPointPlacement(p, cutout), spec));

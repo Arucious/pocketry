@@ -7,6 +7,7 @@ import { useBin } from "@/state/bin-store";
 /** Split is part of one pocket, so it needs no extra list or placement tools. */
 export function PocketSplitControls({ cutout }: { cutout: CutoutPlacement }): JSX.Element {
   const { editorMode, dispatch } = useBin();
+  if (cutout.depthProfile) return <></>;
   const begin = () => {
     dispatch({ type: "SET_VIEW_MODE", viewMode: "2d" });
     dispatch({ type: "SET_EDITOR_MODE", editorMode: "split" });

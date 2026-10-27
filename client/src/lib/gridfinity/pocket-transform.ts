@@ -13,7 +13,7 @@ import { pointInOutline } from "@/lib/geometry/outline";
 import type { Point } from "@shared/geometry/types";
 
 export type PocketTransformMode = "translate" | "rotate";
-export type PocketTransformPatch = Pick<CutoutPlacement, "position" | "zOffsetMm" | "rotationDeg" | "tilt" | "depth" | "split" | "profileBottom" | "profileRotation" | "elevationMm" | "insertionMode">;
+export type PocketTransformPatch = Pick<CutoutPlacement, "position" | "zOffsetMm" | "rotationDeg" | "tilt" | "depth" | "split" | "depthProfile" | "profileBottom" | "profileRotation" | "elevationMm" | "insertionMode">;
 export interface EditablePocket { cutout: CutoutPlacement; shape: TracedShape }
 export type PocketWire = [number, number, number][];
 const RAD = Math.PI / 180;
@@ -39,6 +39,7 @@ export function surfaceAnchoredPocket(original: CutoutPlacement): CutoutPlacemen
       : { mode: "mm", value: depth.value - offset / nz };
   return { ...original, position: transformPointPlacement({ x: 0, y: 0 }, original), zOffsetMm: undefined,
     depth: depthAtSurface(original.depth),
+    depthProfile: original.depthProfile ? { ...original.depthProfile, stations: original.depthProfile.stations.map(s => ({ ...s, depthMm: s.depthMm - offset / nz })) } : undefined,
     split: original.split ? { ...original.split, depths: [depthAtSurface(original.split.depths[0]), depthAtSurface(original.split.depths[1])] } : undefined };
 }
 
@@ -53,7 +54,7 @@ export function pocketTransformPatch(
   if (![position.x, position.y, position.z, ...quaternion.toArray()].every(Number.isFinite)) return null;
   const patch: PocketTransformPatch = {
     position: { x: tidy(position.x), y: tidy(position.y) }, zOffsetMm: undefined,
-    rotationDeg: anchored.rotationDeg, tilt: anchored.tilt, depth: anchored.depth, split: anchored.split, elevationMm: anchored.elevationMm,
+    rotationDeg: anchored.rotationDeg, tilt: anchored.tilt, depth: anchored.depth, split: anchored.split, depthProfile: anchored.depthProfile, elevationMm: anchored.elevationMm,
   };
   // Finite inputs can overflow during coordinate rounding. Never let a bad
   // preview become a committed edit: it would also invalidate saved history.
@@ -136,8 +137,8 @@ export function pocketTransformWires({ cutout, shape }: EditablePocket, spec: Bi
     }
     return wires;
   }
-  if (hasRigidPocket(cutout)) {
-    return rigidPocketPreviewWires(shape.outlineMm,cutout,spec)
+  if (hasRigidPocket(cutout) || cutout.depthProfile) {
+    return rigidPocketPreviewWires(shape.outlineMm,rigidPocket(cutout, shape, spec),spec)
       .map(wire => wire.map(p => [p.x,p.y,p.z]));
   }
   const anchorZ = top + (cutout.zOffsetMm ?? 0);
