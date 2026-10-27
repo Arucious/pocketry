@@ -1,6 +1,7 @@
 import type { BinSpecInput } from "../../shared/gridfinity/types";
 import type { SvgBinOptionsInput } from "../../shared/gridfinity/svg-bin";
 import { depthProfileSchema } from "../../shared/gridfinity/depth-profile";
+import { baseStyleSchema, baseStylePatch, refinedConstructionPreset } from "../../shared/gridfinity/construction";
 
 export const EXPORT_USAGE = `Usage:
   npm run export:bin -- [GRIDXxGRIDYxUNITS] [--fill none|solid] [--no-lip] [--out DIR]
@@ -17,6 +18,11 @@ SVG options: --svg-width MM, --clearance MM, --depth-clearance MM,
 Station positions use the unscaled source outline; transitions lead to the next station.
 Supply GRIDXxGRIDYxUNITS to fix all dimensions; otherwise SVG bins auto-size.
 Use --plan to inspect an SVG design without writing files, --json for JSON,
+  --preset refined for corner side-entry magnets and a notched stacking lip;
+  --base-style solid|standard-magnets|refined-magnets|flat, --lip-notches,
+  --magnet-diameter MM, --magnet-thickness MM, --magnet-skin MM,
+  --magnet-crush-depth MM, --magnet-side left|right, --magnet-release auto|off,
+  --magnet-placement corners|all. Refined dimensions remain provisional.
   --name STEM to name artifacts. --help shows this message.`;
 
 export interface ExportArgs {
@@ -46,6 +52,8 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
   let fixedDimensions = false;
   let fillProvided = false;
   let lipProvided = false;
+  let constructionProvided = false;
+  let magnetTuningProvided = false;
   const seen = new Set<string>();
   const legacyDuplicates = new Set<string>();
   const legacyRepeatable = new Set(["--fill", "--no-lip", "--out"]);
@@ -80,6 +88,29 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
       svgOnly.add(arg);
     }
     else if (arg === "--project") options.projectPath = value();
+    else if (arg === "--preset") {
+      if (value() !== "refined") throw new Error("The supported construction preset is refined.");
+      Object.assign(options.spec, refinedConstructionPreset());
+      Object.assign(options.svgOptions, { baseStyle: "refined-magnets", lip: "standard", lipNotches: true, refinedMagnet: refinedConstructionPreset().refinedMagnet });
+      constructionProvided = true;
+    } else if (arg === "--base-style") {
+      const style = baseStyleSchema.parse(value());
+      Object.assign(options.spec, baseStylePatch(style)); options.svgOptions.baseStyle = style; constructionProvided = true;
+    } else if (arg === "--lip-notches") {
+      options.spec.lipNotches = true; options.svgOptions.lipNotches = true; constructionProvided = true;
+    } else if (["--magnet-diameter", "--magnet-thickness", "--magnet-skin", "--magnet-crush-depth", "--magnet-side", "--magnet-release", "--magnet-placement"].includes(arg)) {
+      const raw = value();
+      const key = { "--magnet-diameter": "diameterMm", "--magnet-thickness": "thicknessMm", "--magnet-skin": "captiveHeightMm", "--magnet-crush-depth": "crushDepthMm" }[arg];
+      const patch = key ? { [key]: numberValue(raw, arg) } : arg === "--magnet-side"
+        ? { sideAccess: raw } : arg === "--magnet-release" ? { easyRelease: raw } : { cornerOnly: raw === "corners" };
+      if (arg === "--magnet-side" && !["left", "right"].includes(raw) || arg === "--magnet-release" && !["auto", "off"].includes(raw)
+          || arg === "--magnet-placement" && !["corners", "all"].includes(raw)) throw new Error(`Invalid value for ${arg}.`);
+      // Validate syntax here; the shared schema checks dimensions before geometry.
+      options.spec.refinedMagnet = { ...options.spec.refinedMagnet, ...patch } as typeof options.spec.refinedMagnet;
+      options.svgOptions.refinedMagnet = { ...options.svgOptions.refinedMagnet, ...patch } as typeof options.svgOptions.refinedMagnet;
+      constructionProvided = true;
+      magnetTuningProvided = true;
+    }
     else if (arg === "--out") options.outDir = value();
     else if (arg === "--name") options.name = value();
     else if (arg === "--json") options.json = true;
@@ -140,7 +171,8 @@ export function parseExportArgs(argv: readonly string[]): ExportArgs {
   if (!options.svgPath && svgOnly.size) throw new Error("SVG options require --svg.");
   if (options.svgPath && !depthProvided) throw new Error("--svg requires --object-depth in millimetres.");
   if (options.svgPath && fillProvided && options.spec.fill !== "solid") throw new Error("SVG pockets require solid fill.");
-  if (options.projectPath && (fixedDimensions || fillProvided || lipProvided)) throw new Error("Project exports use their saved bin dimensions and settings.");
+  if (options.projectPath && (fixedDimensions || fillProvided || lipProvided || constructionProvided)) throw new Error("Project exports use their saved bin dimensions and settings.");
+  if (magnetTuningProvided && options.spec.magnetStyle !== "refined") throw new Error("Magnet tuning requires --preset refined or --base-style refined-magnets.");
   if (options.svgOptions.fingerAccess?.centers?.length && !options.svgOptions.fingerAccess.placement) {
     options.svgOptions.fingerAccess.placement = "custom";
   }

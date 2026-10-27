@@ -3155,6 +3155,29 @@ describe("BinDesignerPage", () => {
     unmount();
   });
 
+  it("applies the refined construction preset, edits magnet dimensions and restores the original with undo", async () => {
+    vi.mocked(ProjectPersistence.loadProjectDoc).mockResolvedValue(EMPTY_PROJECT);
+    const { container, unmount } = renderPage(); await flushHydration();
+    openSettingsSection(container, "construction");
+    const preset = [...container.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent === "Refined magnets + notched lip")!;
+    React.act(() => preset.click());
+    const current = () => vi.mocked(useBinGeometry).mock.lastCall?.[0];
+    expect(current()).toMatchObject({ magnetStyle: "refined", magnetHoles: true, lipNotches: true, screwHoles: false });
+    const field = container.querySelector<HTMLInputElement>('[aria-label="Magnet diameter in millimetres"]')!;
+    React.act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(field, "6.3");
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    React.act(() => field.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+    expect(current()?.refinedMagnet?.diameterMm).toBe(6.3);
+    React.act(() => container.querySelector<HTMLButtonElement>('[data-testid="button-bin-undo"]')!.click());
+    expect(current()?.refinedMagnet?.diameterMm).toBe(6.25);
+    React.act(() => container.querySelector<HTMLButtonElement>('[data-testid="button-bin-undo"]')!.click());
+    expect(current()?.magnetHoles).toBe(false);
+    expect(current()?.lipNotches).toBeUndefined();
+    unmount();
+  });
+
   it("edits ramp-following access and a chamfer through the property controls and undo", async () => {
     const shape = rectangularShape("ramp-tool", "Ramp tool");
     const pocket = parseCutoutPlacement({ id: "ramp", shapeId: shape.id, position: { x: 0, y: 0 },

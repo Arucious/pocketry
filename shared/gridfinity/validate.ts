@@ -2,6 +2,7 @@ import { hasPocketTilt, pocketAxis } from "./pocket-orientation";
 import { hasRigidPocket } from "./rigid-pocket";
 import { depthProfileError } from "./depth-profile";
 import { resolveFingerAccessDepth } from "./finger-access-depth";
+import { DEFAULT_REFINED_MAGNETS, MIN_REFINED_MAGNET_ROOF_MM, REFINED_MAGNET_HEIGHT_ALLOWANCE_MM } from "./construction";
 import { pocketInsertionError } from "./pocket-insertion";
 import {
   distanceToSegment,
@@ -132,6 +133,18 @@ const FOOTPRINT_WARN_MM = 260;
 export function validateBinSpec(spec: BinSpec): ValidationResult {
   const issues: ValidationIssue[] = [];
   const wallHeight = binWallHeightMm(spec.heightUnits);
+  if (!spec.flatBottom && spec.magnetHoles && spec.magnetStyle === "refined") {
+    const settings = spec.refinedMagnet ?? DEFAULT_REFINED_MAGNETS;
+    if (spec.gridPitch !== "full") issues.push({ code: "refined-magnet-pitch", severity: "error",
+      message: "Refined side-entry magnets require full 42 mm sockets." });
+    if (spec.screwHoles || spec.magnetCrushRibs) issues.push({ code: "refined-magnet-conflict", severity: "error",
+      message: "Refined magnets cannot be combined with screw bores or standard crush ribs. Use the refined crush-depth setting instead." });
+    const roof = BASE_PROFILE_HEIGHT - settings.captiveHeightMm - settings.thicknessMm - REFINED_MAGNET_HEIGHT_ALLOWANCE_MM;
+    if (roof < MIN_REFINED_MAGNET_ROOF_MM - 1e-6) issues.push({ code: "refined-magnet-roof", severity: "error",
+      message: `The refined cavity leaves ${roof.toFixed(2)} mm below the top of the foot. Keep at least ${MIN_REFINED_MAGNET_ROOF_MM} mm by reducing cavity or retaining-skin height.` });
+  }
+  if (spec.lip === "standard" && spec.lipNotches && spec.gridPitch !== "full") issues.push({
+    code: "notched-lip-pitch", severity: "error", message: "Top notches require the full 42 mm grid pitch." });
 
   if (spec.lip === "standard" && wallHeight < STACKING_LIP_SUPPORT_HEIGHT_MM) {
     issues.push({
@@ -545,7 +558,7 @@ function validateAgainstBin(spec: BinSpec, p: PlacedCutout): ValidationIssue[] {
         if (!spec.flatBottom && spec.magnetHoles && pocket.floorZ < BASE_HEIGHT) {
           issues.push({
             code: "floor-in-base",
-            severity: "warning",
+            severity: spec.magnetStyle === "refined" ? "error" : "warning",
             cutoutIds: [cutout.id],
             message: `“${label}” reaches into the base, where the magnet holes live.`,
           });

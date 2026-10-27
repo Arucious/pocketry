@@ -18,6 +18,7 @@ import type { Kernel } from "@/lib/manifold/runtime";
 import { roundedRectPolygon, stackingLipProfilePolygon } from "./profiles";
 import { sweepRounded } from "./sweep";
 import { footprintInteriorSection, footprintOuterSection } from "./footprint-section";
+import { notchedStackingLip } from "./refined-base";
 
 /**
  * The bin wall and its stacking lip, ported from upstream `render_wall()` /
@@ -40,6 +41,7 @@ export interface WallSpec {
   heightUnits: number;
   fill?: "none" | "solid";
   lip?: "standard" | "none";
+  lipNotches?: boolean;
   wallThicknessMm?: number;
 }
 
@@ -130,13 +132,14 @@ export function buildStackingLip(
 
   const profile = stackingLipProfilePolygon({ wallHeightMm, circularSegments });
   if (spec.footprint?.kind === "custom") {
-    return buildCustomStackingLip(
+    const lip = buildCustomStackingLip(
       kernel,
       spec,
       profile,
       circularSegments,
       profileStepMm,
     );
+    return spec.lipNotches && (spec.gridPitch ?? "full") === "full" ? notchedStackingLip(kernel, spec, lip, circularSegments) : lip;
   }
   const widthMm = binFootprintMm(spec.gridX, spec.gridPitch);
   const lengthMm = binFootprintMm(spec.gridY, spec.gridPitch);
@@ -149,7 +152,8 @@ export function buildStackingLip(
     },
     circularSegments,
   );
-  return arena.track(swept.translate([0, 0, BASE_HEIGHT]));
+  const lip = arena.track(swept.translate([0, 0, BASE_HEIGHT]));
+  return spec.lipNotches && (spec.gridPitch ?? "full") === "full" ? notchedStackingLip(kernel, spec, lip, circularSegments) : lip;
 }
 
 function buildCustomStackingLip(

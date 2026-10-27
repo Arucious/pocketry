@@ -14,6 +14,8 @@ import {
   SCREW_HOLE_RADIUS,
 } from "@shared/gridfinity/standard";
 import { cellCenterMm, occupiedCells } from "@shared/gridfinity/footprint";
+import { DEFAULT_REFINED_MAGNETS, type RefinedMagnetSettings } from "@shared/gridfinity/construction";
+import { refinedMagnetCutter, refinedMagnetCutters } from "./refined-base";
 
 import type { Kernel } from "@/lib/manifold/runtime";
 
@@ -38,7 +40,8 @@ import type { GridSize } from "./base";
  * `crushRibs` reproduces upstream `ribbed_cylinder()`: the magnet bore's
  * radius follows a sine wave between the rib waist (⌀5.9) and the nominal
  * bore (⌀6.5), leaving eight inward lobes the magnet crushes on insertion —
- * a press fit with no glue. The Gridfinity Refined hole remains unported.
+ * a press fit with no glue. Optional refined side-entry magnets use the
+ * separate native port in refined-base.ts; standard bores remain unchanged.
  * Deviations from upstream (dropped ±0.02 TOLLERANCE padding, fixed band
  * orientation) are in UPSTREAM.md.
  */
@@ -54,6 +57,7 @@ export interface HoleOptions {
   chamfer: boolean;
   /** Sinusoidal crush ribs in the magnet bore for a glue-free press fit. */
   crushRibs?: boolean;
+  refined?: RefinedMagnetSettings;
 }
 
 export const NO_HOLES: HoleOptions = {
@@ -69,6 +73,8 @@ export function holeOptionsFromSpec(spec: {
   magnetHoles: boolean;
   screwHoles: boolean;
   magnetCrushRibs?: boolean;
+  magnetStyle?: "standard" | "refined";
+  refinedMagnet?: RefinedMagnetSettings;
 }): HoleOptions {
   return {
     magnet: spec.magnetHoles,
@@ -76,6 +82,7 @@ export function holeOptionsFromSpec(spec: {
     supportless: spec.magnetHoles || spec.screwHoles,
     chamfer: false,
     crushRibs: spec.magnetHoles && (spec.magnetCrushRibs ?? false),
+    ...(spec.magnetHoles && spec.magnetStyle === "refined" ? { refined: spec.refinedMagnet ?? DEFAULT_REFINED_MAGNETS } : {}),
   };
 }
 
@@ -191,6 +198,7 @@ export function baseHoleCutter(
 ): Manifold | null {
   const { Manifold, arena } = kernel;
   if (!hasHoles(options)) return null;
+  if (options.magnet && options.refined) return refinedMagnetCutter(kernel, options.refined, circularSegments);
 
   const pieces: Manifold[] = [];
 
@@ -284,6 +292,7 @@ export function baseHoleCutters(
   // validator warns and the geometry stays solid rather than overlapping
   // cutters into a corrupt base.
   if (grid.gridPitch && grid.gridPitch !== "full") return null;
+  if (options.magnet && options.refined) return refinedMagnetCutters(kernel, grid, options.refined, circularSegments);
   const cluster = baseHoleCutter(kernel, options, circularSegments);
   if (cluster === null) return null;
 

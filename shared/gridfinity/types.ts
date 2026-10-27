@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { surfaceTextSchema, textColorSchema } from "./surface-text";
+import { refinedMagnetSchema } from "./construction";
 
 import {
   footprintTopologyError,
@@ -64,6 +65,8 @@ export const binSpecSchema = z
     heightUnits: z.number().min(1).max(MAX_HEIGHT_UNITS).multipleOf(0.5),
     /** Stacking lip on the rim. `none` gives a flush top. */
     lip: z.enum(["standard", "none"]).default("standard"),
+    /** Per-cell receiving relief on the top rim, retaining the standard mating profile. */
+    lipNotches: z.boolean().optional(),
     /**
      * Interior fill. `solid` fills to the selected height, ready for
      * cutouts to be subtracted — the Pocketry pocket workflow, hence the
@@ -80,6 +83,9 @@ export const binSpecSchema = z
     flatBottom: z.boolean().default(false),
     /** ⌀6.5 × 2.4 mm magnet pockets, four per cell, opening downward. */
     magnetHoles: z.boolean().default(false),
+    /** Absent preserves legacy downward magnet bores. */
+    magnetStyle: z.enum(["standard", "refined"]).optional(),
+    refinedMagnet: refinedMagnetSchema.optional(),
     /**
      * Crush ribs in the magnet bore: eight sinusoidal lobes (waist ⌀5.9)
      * the magnet crushes on insertion — press fit, no glue. Only meaningful

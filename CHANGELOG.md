@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an opt-in refined side-entry magnet preset and notched stacking lip, editable fit/removal settings, protected base/roof validation, and matching CLI/MCP options.
+
 - Match finger-access floors to nearby depth ramps, bevel their openings, and block cuts into the protected base; support the same settings in CLI and MCP exports.
 
 - Add up to 64 depth stations per pocket with sharp steps, straight ramps, or smooth blends, editable side profiles and layout guides; preserve settings in saved projects.

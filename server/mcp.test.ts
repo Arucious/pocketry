@@ -47,9 +47,12 @@ describe("Pocketry MCP tools over the official SDK", () => {
     const profile = { axis: "x", stations: [{ atMm: 0, depthMm: 12, transition: "step" },
       { atMm: 10, depthMm: 12, transition: "smooth" }, { atMm: 30, depthMm: 4, transition: "linear" }] };
     const response = await client.callTool({ name: "pocketry_plan_svg_bin", arguments: { svgPath: "tool.svg",
-      options: { objectDepthMm: 12, depthProfile: profile } } });
+      options: { objectDepthMm: 12, depthProfile: profile, baseStyle: "refined-magnets", lipNotches: true,
+        refinedMagnet: { diameterMm: 6.3 }, fingerAccess: { depthMode: "nearest-profile", topChamferMm: .5 } } } });
     expect(response.isError).not.toBe(true);
-    expect(readSvgBin).toHaveBeenCalledWith("tool.svg", expect.objectContaining({ depthProfile: profile }), expect.anything());
+    expect(readSvgBin).toHaveBeenCalledWith("tool.svg", expect.objectContaining({ depthProfile: profile,
+      baseStyle: "refined-magnets", lipNotches: true, refinedMagnet: expect.objectContaining({ diameterMm: 6.3 }),
+      fingerAccess: expect.objectContaining({ depthMode: "nearest-profile", topChamferMm: .5 }) }), expect.anything());
   });
   it("advertises photo and SVG tools, shared planner fields and local write annotations", async () => {
     const client = await connect();

@@ -10,6 +10,7 @@ import { useSelectionInspector } from "./selection-inspector-context";
 import { useExperimentalFeatures } from "@/state/experimental-features";
 import { hasPocketTilt } from "@shared/gridfinity/pocket-orientation";
 import { resolveFingerAccessDepth } from "@shared/gridfinity/finger-access-depth";
+import { RefinedConstructionControls } from "./refined-construction-controls";
 import {
   Box,
   ChevronDown,
@@ -1604,6 +1605,7 @@ export function BinControlsPanel({
           defaultOpen={false}
           className="scroll-mt-16"
         >
+          <RefinedConstructionControls spec={spec} onChange={patchSpec} />
           <FeatureSwitch
             label="Stacking lip"
             description={spec.flatBottom ? "Receives a Gridfinity bin on top" : "Lets another bin stack on top"}
@@ -1657,14 +1659,14 @@ export function BinControlsPanel({
                 label="Magnet holes"
                 description={
                   spec.gridPitch === "full"
-                    ? "⌀6.5 × 2.4 mm, four per cell"
+                    ? spec.magnetStyle === "refined" ? "Side entry with retaining skin and optional removal relief" : "⌀6.5 × 2.4 mm, four per cell"
                     : "Available on the full 42 mm pitch"
                 }
                 checked={spec.magnetHoles}
                 disabled={spec.gridPitch !== "full"}
                 onChange={(magnetHoles) => patchSpec({ magnetHoles })}
               />
-              {spec.magnetHoles && (
+              {spec.magnetHoles && spec.magnetStyle !== "refined" && (
                 <FeatureSwitch
                   label="Crush ribs"
                   description="Press-fit magnets, no glue"
@@ -1680,7 +1682,7 @@ export function BinControlsPanel({
                     : "Available on the full 42 mm pitch"
                 }
                 checked={spec.screwHoles}
-                disabled={spec.gridPitch !== "full"}
+                disabled={spec.gridPitch !== "full" || (spec.magnetHoles && spec.magnetStyle === "refined")}
                 onChange={(screwHoles) => patchSpec({ screwHoles })}
               />
             </>

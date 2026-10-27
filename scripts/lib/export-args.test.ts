@@ -2,6 +2,19 @@ import { describe, expect, it } from "vitest";
 import { parseExportArgs } from "./export-args";
 
 describe("export CLI arguments", () => {
+  it("applies the same refined preset and tuning to empty and SVG bins", () => {
+    const flags = ["--preset", "refined", "--magnet-diameter", "6.3", "--magnet-thickness", "2.15",
+      "--magnet-skin", ".45", "--magnet-side", "left", "--magnet-release", "off", "--magnet-placement", "all", "--magnet-crush-depth", ".15"];
+    const empty = parseExportArgs(flags), svg = parseExportArgs(["--svg", "s.svg", "--object-depth", "12", ...flags]);
+    expect(empty.spec).toMatchObject({ lipNotches: true, magnetHoles: true, magnetStyle: "refined", screwHoles: false });
+    expect(empty.spec.refinedMagnet).toEqual(svg.svgOptions.refinedMagnet);
+    expect(svg.svgOptions).toMatchObject({ baseStyle: "refined-magnets", lipNotches: true });
+    expect(parseExportArgs(["--base-style", "solid"]).spec.magnetHoles).toBe(false);
+    expect(parseExportArgs(["--base-style", "flat"]).spec.flatBottom).toBe(true);
+    expect(() => parseExportArgs(["--project", "p.json", "--preset", "refined"])).toThrow("saved");
+    expect(() => parseExportArgs(["--magnet-diameter", "6.3"])).toThrow("requires");
+    expect(() => parseExportArgs(["--preset", "refined", "--magnet-side", "up"])).toThrow("Invalid");
+  });
   it("exposes conforming access floors and entry bevels", () => {
     const args = parseExportArgs(["--svg", "s.svg", "--object-depth", "12", "--depth-profile", "p.json",
       "--finger-follow-ramp", "--finger-chamfer", "0.5"]);

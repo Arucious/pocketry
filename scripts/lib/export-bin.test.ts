@@ -21,6 +21,20 @@ afterEach(async () => { await Promise.all(directories.splice(0).map(path => rm(p
 const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="72mm" height="32mm" viewBox="0 0 72 32"><rect x="4" y="4" width="64" height="24" rx="2"/></svg>';
 
 describe("shared headless export", () => {
+  it("exports an editable refined preset through the real CLI and blocks an unsafe magnet roof", async () => {
+    const directory = await temporaryDirectory();
+    const args = ["--import", "tsx", "scripts/export-bin.ts", "2x1x3", "--preset", "refined", "--json", "--out", directory];
+    const { stdout } = await promisify(execFile)(process.execPath, args);
+    const result = JSON.parse(stdout);
+    expect(result.warnings).toEqual([]);
+    expect((await readProjectFile(result.paths.project)).spec).toMatchObject({ magnetStyle: "refined", lipNotches: true,
+      refinedMagnet: { diameterMm: 6.25, captiveHeightMm: .4, easyRelease: "auto", cornerOnly: true } });
+    expect((await readFile(result.paths.stl)).readUInt32LE(80)).toBe(result.triangles);
+    const model = strFromU8(unzipSync(await readFile(result.paths.threeMf))["3D/3dmodel.model"]);
+    expect(model.match(/<triangle /g)).toHaveLength(result.triangles);
+    await expect(promisify(execFile)(process.execPath, [...args, "--magnet-thickness", "3.5", "--magnet-skin", "1.2"]))
+      .rejects.toThrow(/foot|roof/);
+  }, 20_000);
   it("exports CLI depth stations and JSON profiles through the same printable kernel", async () => {
     const directory = await temporaryDirectory(), input = join(directory, "tool.svg"), file = join(directory, "profile.json");
     await writeFile(input, svg);

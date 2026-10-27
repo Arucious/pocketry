@@ -26,6 +26,13 @@ function rectangle(width: number, length: number, rotation = 0): TracedShape {
 }
 
 describe("SVG pocket bin planning", () => {
+  it("saves explicit refined construction without changing generic defaults", () => {
+    const { project } = planSvgBin(rectangle(25, 12), { objectDepthMm: 9, baseStyle: "refined-magnets", lipNotches: true,
+      refinedMagnet: { diameterMm: 6.3, easyRelease: "off" } });
+    expect(project.spec).toMatchObject({ magnetHoles: true, magnetStyle: "refined", lipNotches: true,
+      refinedMagnet: { diameterMm: 6.3, thicknessMm: 2.1, captiveHeightMm: .4, easyRelease: "off", cornerOnly: true } });
+    expect(parseProjectDoc(JSON.parse(JSON.stringify(project)))).toEqual(JSON.parse(JSON.stringify(project)));
+  });
   it("uses generic stackable defaults, a native base and an editable current project", () => {
     const { project, summary } = planSvgBin(rectangle(25, 12), { objectDepthMm: 9 });
     expect(project.spec).toMatchObject({ gridX: 1, gridY: 1, heightUnits: 3, fill: "solid", lip: "standard",

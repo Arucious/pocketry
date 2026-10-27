@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { depthProfileSchema, depthProfileError, maximumProfileDepth, minimumProfileDepth, type DepthProfile } from "./depth-profile";
+import { baseStyleSchema, baseStylePatch, refinedMagnetSchema } from "./construction";
 
 import { minAreaObb } from "../geometry/obb";
 import { distanceToSegment, pointInRing, ringBounds, signedArea } from "../geometry/rings";
@@ -73,6 +74,9 @@ export const svgBinOptionsSchema = z.object({
   heightUnits: z.number().int().min(1).max(MAX_HEIGHT_UNITS).optional(),
   fingerAccess: svgFingerAccessOptionsSchema.default({}),
   lip: z.enum(["standard", "none"]).default("standard"),
+  lipNotches: z.boolean().optional(),
+  baseStyle: baseStyleSchema.optional(),
+  refinedMagnet: refinedMagnetSchema.optional(),
   name: z.string().trim().min(1).max(80).optional(),
 }).strict().superRefine((options, context) => {
   if (options.fingerAccess.depthMode === "nearest-profile" && !options.depthProfile) context.addIssue({
@@ -313,7 +317,10 @@ export function planSvgBin(inputShape: TracedShape, inputOptions: unknown): SvgB
     for (const gridX of xs) for (const gridY of ys) {
       if (best && gridX * gridY > best.spec.gridX * best.spec.gridY) continue;
       const spec = parseBinSpec({ gridX, gridY, heightUnits: vertical.heightUnits, lip: options.lip,
-        fill: "solid", fillHeightPercent: vertical.fillHeightPercent, magnetHoles: false, screwHoles: false, labelTab: null });
+        fill: "solid", fillHeightPercent: vertical.fillHeightPercent, magnetHoles: false, screwHoles: false, labelTab: null,
+        ...(options.baseStyle ? baseStylePatch(options.baseStyle) : {}),
+        ...(options.lipNotches !== undefined ? { lipNotches: options.lipNotches } : {}),
+        ...(options.refinedMagnet ? { refinedMagnet: options.refinedMagnet } : {}) });
       // Distance at the centre checks the entire circle, including arc extrema
       // between the validator's finite polygon samples at rounded bin corners.
       if (centers.some(center => signedDistanceToInterior(center, spec) + EPSILON < radius + lipIntrusion)) continue;

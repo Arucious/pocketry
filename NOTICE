@@ -471,6 +471,28 @@ in their npm packages; original Pocketry and Gridfinity provenance is unchanged.
 outline for the SVG automation examples, distributed under AGPL-3.0-only.
 
 ================================================================================
+Refined side-entry magnets and notched rim — GPL-3.0-only
+================================================================================
+
+client/src/lib/gridfinity/refined-base.ts adapts the side-entry magnet, retaining
+skin, optional removal relief and per-cell receiving-cavity constructions from
+Gridfinity Extended by ostat, pinned to 94d5a3e2d39e0b90894c042a255fc487cfcc9197:
+https://github.com/ostat/gridfinity_extended_openscad
+modules/module_magnet.scad, module_gridfinity_block.scad, module_gridfinity.scad
+and module_lip.scad. The adapted module retains GPL-3.0-only; its licence text
+is included at licenses/GridfinityExtended-GPL-3.0.txt. Manifold construction,
+corner-mask placement and the integration with Pocketry's native foot/profile
+heights are new; the removal relief preserves the centre of the retaining skin
+and uses a sloped roof rather than the source's rounded roof. This is not a
+byte-for-byte Extended geometry export.
+
+Compatibility review: GPLv3 section 13 expressly permits combining GPLv3 code
+with AGPLv3 code into one work. The adapted module retains GPLv3; AGPLv3's
+section 13 network-interaction requirements apply to the combined application.
+No new runtime dependency or OpenSCAD binary is bundled. Preserve this notice,
+both licence texts, and corresponding source when distributing the application.
+
+================================================================================
 Local photo decoding — sharp (Apache-2.0) and libvips (LGPL-3.0-or-later)
 ================================================================================
 
