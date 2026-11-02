@@ -1,0 +1,13 @@
+{
+  "largeTipPitchRiseMm": 4,
+  "smallTipRiseMm": 0.2,
+  "smallTipRampLengthMm": 35,
+  "smallPocketLowerMm": 0,
+  "largePlacementDelta": { "x": -3, "y": 8, "angleDeg": 6.5 },
+  "smallPlacementDelta": { "x": -0.25, "y": 0.25 },
+  "curves": [
+    { "pocketId": "scissors-1", "startIndex": 52, "endIndex": 83, "method": "arc", "maxDeviation": 0.25, "outwardOnly": true },
+    { "pocketId": "scissors-2", "startIndex": 147, "endIndex": 165, "method": "smooth", "iterations": 16, "maxDeviation": 0.1, "outwardOnly": true },
+    { "pocketId": "scissors-2", "startIndex": 165, "endIndex": 182, "method": "smooth", "iterations": 16, "maxDeviation": 0.1, "outwardOnly": true }
+  ]
+}

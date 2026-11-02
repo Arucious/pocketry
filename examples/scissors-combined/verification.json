@@ -1,0 +1,299 @@
+{
+  "name": "Combined scissors 06",
+  "settings": {
+    "largeTipPitchRiseMm": 4,
+    "smallTipRiseMm": 0.2,
+    "smallTipRampLengthMm": 35,
+    "smallPocketLowerMm": 0,
+    "largePlacementDelta": {
+      "x": -3,
+      "y": 8,
+      "angleDeg": 6.5
+    },
+    "smallPlacementDelta": {
+      "x": -0.25,
+      "y": 0.25
+    },
+    "curves": [
+      {
+        "pocketId": "scissors-1",
+        "startIndex": 52,
+        "endIndex": 83,
+        "method": "arc",
+        "maxDeviation": 0.25,
+        "outwardOnly": true
+      },
+      {
+        "pocketId": "scissors-2",
+        "startIndex": 147,
+        "endIndex": 165,
+        "method": "smooth",
+        "iterations": 16,
+        "maxDeviation": 0.1,
+        "outwardOnly": true
+      },
+      {
+        "pocketId": "scissors-2",
+        "startIndex": 165,
+        "endIndex": 182,
+        "method": "smooth",
+        "iterations": 16,
+        "maxDeviation": 0.1,
+        "outwardOnly": true
+      }
+    ]
+  },
+  "curveReports": [
+    {
+      "pocketId": "scissors-1",
+      "operation": {
+        "startIndex": 52,
+        "endIndex": 83,
+        "method": "arc",
+        "maxDeviation": 0.25,
+        "outwardOnly": true
+      },
+      "maximumMoveMm": 0.25000000000000133,
+      "limited": true,
+      "fit": {
+        "radius": 28.508816983385483
+      }
+    },
+    {
+      "pocketId": "scissors-2",
+      "operation": {
+        "startIndex": 147,
+        "endIndex": 165,
+        "method": "smooth",
+        "iterations": 16,
+        "maxDeviation": 0.1,
+        "outwardOnly": true
+      },
+      "maximumMoveMm": 0.04129336846083381,
+      "limited": false
+    },
+    {
+      "pocketId": "scissors-2",
+      "operation": {
+        "startIndex": 165,
+        "endIndex": 182,
+        "method": "smooth",
+        "iterations": 16,
+        "maxDeviation": 0.1,
+        "outwardOnly": true
+      },
+      "maximumMoveMm": 0.10000000000000075,
+      "limited": true
+    }
+  ],
+  "largeSeatPitchDegrees": 1.1065140070994097,
+  "measuredLargeEnvelope": [
+    {
+      "label": "A1",
+      "x": -30,
+      "y": -82,
+      "thickness": 9.85,
+      "floorZ": 7.411653631562652,
+      "estimatedToolTopZ": 17.261653631562652,
+      "clearanceBelowWallTopMm": 3.738346368437348
+    },
+    {
+      "label": "A2",
+      "x": 32,
+      "y": -70,
+      "thickness": 9.85,
+      "floorZ": 7.6434301988805515,
+      "estimatedToolTopZ": 17.493430198880553,
+      "clearanceBelowWallTopMm": 3.506569801119447
+    },
+    {
+      "label": "B (approx lower gap)",
+      "x": -3,
+      "y": -25,
+      "thickness": 4.95,
+      "floorZ": 10.212592326322678,
+      "estimatedToolTopZ": 15.162592326322677,
+      "clearanceBelowWallTopMm": 5.837407673677323
+    },
+    {
+      "label": "C",
+      "x": -7,
+      "y": 17,
+      "thickness": 10.4,
+      "floorZ": 9.323810311935327,
+      "estimatedToolTopZ": 19.723810311935328,
+      "clearanceBelowWallTopMm": 1.2761896880646724
+    },
+    {
+      "label": "D",
+      "x": -10,
+      "y": 56,
+      "thickness": 6.7,
+      "floorZ": 10.077084155718502,
+      "estimatedToolTopZ": 16.7770841557185,
+      "clearanceBelowWallTopMm": 4.2229158442814985
+    },
+    {
+      "label": "E",
+      "x": -11,
+      "y": 91,
+      "thickness": 4.25,
+      "floorZ": 11.453099143729045,
+      "estimatedToolTopZ": 15.703099143729045,
+      "clearanceBelowWallTopMm": 5.296900856270955
+    }
+  ],
+  "access": [
+    {
+      "id": "access-1",
+      "owner": "scissors-1",
+      "minFloorZ": 8.98867026159413,
+      "minimumDepthMm": 8.314165394209182,
+      "maximumDepthMm": 9.211329738405869
+    },
+    {
+      "id": "access-2",
+      "owner": "scissors-1",
+      "minFloorZ": 8.98867026159413,
+      "minimumDepthMm": 8.41997280799101,
+      "maximumDepthMm": 9.211329738405869
+    },
+    {
+      "id": "access-3",
+      "owner": "scissors-2",
+      "minFloorZ": 11,
+      "minimumDepthMm": 4.69026743215803,
+      "maximumDepthMm": 7.2
+    },
+    {
+      "id": "access-4",
+      "owner": "scissors-2",
+      "minFloorZ": 11,
+      "minimumDepthMm": 4.69,
+      "maximumDepthMm": 7.2
+    }
+  ],
+  "issues": [
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Large scissors” and “Large handle bridge full-height rounding” overlap. Their cuts will be combined.",
+      "cutoutIds": [
+        "scissors-1",
+        "scissors-1-bridge-full-height-relief-04"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Large scissors” and “Large finger joining bevel 1” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-1",
+        "scissors-1-finger-join-bevel-1-05"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Large scissors” and “Large finger joining bevel 2” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-1",
+        "scissors-1-finger-join-bevel-2-05"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Large scissors” and “Large finger joining bevel 3” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-1",
+        "scissors-1-finger-join-bevel-3-05"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Large scissors” and “Large finger joining bevel 4” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-1",
+        "scissors-1-finger-join-bevel-4-05"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Small scissors” and “Small handle bridge full-height rounding” overlap. Their cuts will be combined.",
+      "cutoutIds": [
+        "scissors-2",
+        "scissors-2-bridge-full-height-relief-04"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Small scissors” and “Small finger joining bevel 1” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-2",
+        "scissors-2-finger-join-bevel-1-05"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Small scissors” and “Small finger joining bevel 2” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-2",
+        "scissors-2-finger-join-bevel-2-05"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Small scissors” and “Small finger joining bevel 3” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-2",
+        "scissors-2-finger-join-bevel-3-05"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Small scissors” and “Small finger joining bevel 4” merge once their clearances and top-edge rounds are added.",
+      "cutoutIds": [
+        "scissors-2",
+        "scissors-2-finger-join-bevel-4-05"
+      ]
+    }
+  ],
+  "verification": {
+    "connectedSolid": true,
+    "watertightSerializedStl": true,
+    "consistentWinding": true,
+    "triangles": 43080,
+    "volumeCm3": 273.4958268027468,
+    "dimensionsMm": [
+      251.5,
+      83.5,
+      24.551471710205078
+    ],
+    "floorProbes": 36,
+    "auxiliaryProbes": 40,
+    "stackingLipRemovedMm3": 1.2290964489509562e-7,
+    "protectedBaseRemovedMm3": 1.0317234980403224e-8,
+    "cavityGroupOverlapMm3": 0,
+    "groupOverlapIncludingOneMmReserveMm2": 0,
+    "cleanupToleranceMm": 0.000001,
+    "cleanupVolumeChangeMm3": 4.207831807434559e-7,
+    "stlSha256": "3a3c9fdf0b0645f9a515f00f8800ff81911daad1f5c28a261c8116b9feb2be66",
+    "threeMfSha256": "79983987bdc337ea8d8ded88e3f336336c656ac2b47d807889d237e3e0578389"
+  },
+  "notes": [
+    "Full combined bin, not a coupon.",
+    "Large is mirrored to show the logo; old underside-gap data came from the opposite face and needs a physical recheck.",
+    "The large seat adds a 4 mm end-to-end linear rise (about 1.1 degrees), retaining old local underside relief. Vertical shear approximates this shallow rigid tilt.",
+    "Small gets +0.2 mm support over the last 35 mm. No measured small thickness was supplied; rim clearance cannot be inferred from the photo.",
+    "--small-lower MM deepens the entire small group, access floors and bevels together, preserving the tip correction. Zero is the default until interference is confirmed.",
+    "Native checks require the complete stacking lip and base below Z 7 to remain unchanged.",
+    "These are model-only STL/3MF files, not sliced printer jobs."
+  ]
+}
