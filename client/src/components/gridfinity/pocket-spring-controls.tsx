@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {wallSpringSchema,type WallSpring,BACKED_LEAF} from "@shared/gridfinity/spring-schema";
 import {nearestSpringAnchor,planWallSpring,springRing} from "@shared/gridfinity/wall-spring";
-import {transformOutlinePlacement,type CutoutPlacement,type TracedShape} from "@shared/gridfinity/cutout";
+import {transformOutlinePlacement,fingerHoleFootprintRing,type CutoutPlacement,type TracedShape} from "@shared/gridfinity/cutout";
 import {outlineBounds} from "@shared/geometry/outline";
 import {ringPerimeter} from "@shared/geometry/rings";
 import {applyLinkedEdits} from "@shared/gridfinity/design-links";
@@ -52,9 +52,11 @@ function SpringEditor({initial,source,current,shape,shapes,onApply,onCancel}:{in
         setDraft({...draft,shapeIndex:anchor.shapeIndex,ringIndex:anchor.ringIndex,atMm:anchor.atMm});
       }}>
         {outline.flatMap((s,i)=>[s.outer,...s.holes].map((r,j)=><path key={`${i}:${j}`} d={path(r)} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke"/>))}
-        {fingerHoles.map(h=><circle key={h.id} cx={h.center.x} cy={-h.center.y} r={h.diameterMm/2+(h.topChamferMm??0)} fill="#dc2626" fillOpacity=".12" stroke="#dc2626" strokeWidth="1" vectorEffect="non-scaling-stroke"/>)}
-        {plan&&<><path d={path(plan.housing)} fill={error?"#d97706":"#16a34a"} fillOpacity=".3" stroke={error?"#d97706":"#15803d"} strokeWidth="1" vectorEffect="non-scaling-stroke"/><circle cx={plan.center.x} cy={-plan.center.y} r={.65} fill="#0369a1"/></>}
-      </svg><p className="pt-2 text-xs text-muted-foreground">Green: spring housing and backing · Red: finger access exclusion · Blue: wall anchor</p></div>
+        {fingerHoles.map(h=><path key={h.id} d={path(fingerHoleFootprintRing(h,{position:{x:0,y:0},rotationDeg:0,mirrored:false},96))} fill="#dc2626" fillOpacity=".12" stroke="#dc2626" strokeWidth="1" vectorEffect="non-scaling-stroke"/>)}
+        {plan&&<><path d={path(plan.releaseOutline)} fill={error?"#d97706":"#16a34a"} fillOpacity=".2" stroke={error?"#d97706":"#15803d"} strokeWidth="1" vectorEffect="non-scaling-stroke"/>
+          <path d={path([plan.point(-draft.widthMm/2,plan.beamFrontMm),plan.point(draft.widthMm/2,plan.beamFrontMm),plan.point(draft.widthMm/2,plan.beamFrontMm+BACKED_LEAF.beamMm),plan.point(-draft.widthMm/2,plan.beamFrontMm+BACKED_LEAF.beamMm)])} fill="#166534" fillOpacity=".7"/>
+          <circle cx={plan.center.x} cy={-plan.center.y} r={.35} fill="#0369a1"/></>}
+      </svg><p className="pt-2 text-xs text-muted-foreground">Dark green: leaf · Light green: open release well · Red: finger access exclusion · Blue: wall anchor</p></div>
       <div className="space-y-3 text-xs"><label className="grid gap-1">Contour<select aria-label="Spring contour" className="h-8 rounded border bg-background" value={`${draft.shapeIndex}:${draft.ringIndex}`} onChange={e=>{const [shapeIndex,ringIndex]=e.target.value.split(":").map(Number);setDraft({...draft,shapeIndex,ringIndex,atMm:0});}}>{shape.outlineMm.flatMap((s,i)=>[s.outer,...s.holes].map((_,j)=><option key={`${i}:${j}`} value={`${i}:${j-1}`}>Shape {i+1} · {j?`Hole ${j}`:"Outer wall"}</option>))}</select></label>
       {([['atMm','Contour distance',0,length,.5],['heightMm','Leaf height',10,30,.5],['rootFloorMm','Root above bin underside',spec.flatBottom?1.2:7,280,.5],['widthMm','Leaf width',4,10,.5],['travelMm','Backing gap',.3,.5,.05],['interferenceMm','Contact overlap',.02,.2,.02]] as const).map(([key,label,min,max,step])=><label key={key} className="grid gap-1">{label} (mm)<DraftNumberInput aria-label={label} value={draft[key]} min={min} max={max} step={step} displayPrecision={2} onValueChange={value=>setDraft({...draft,[key]:value})}/></label>)}
       <p className="text-muted-foreground">{BACKED_LEAF.beamMm} mm beam · {BACKED_LEAF.rootMm} mm tapered root · {BACKED_LEAF.contactRadiusMm} mm rounded contact</p>

@@ -15,4 +15,5 @@ export const wallSpringSchema=z.object({
 }).strict();
 export type WallSpring=z.infer<typeof wallSpringSchema>;
 export const BACKED_LEAF={beamMm:1.2,rootMm:1.6,bandMm:1,taperMm:2,
-  bevelMm:.3,contactRadiusMm:.8,contactDropMm:1.5,sideGapMm:1,setbackMm:.2,backingMm:.95} as const;
+  bevelMm:.3,contactRadiusMm:.8,contactDropMm:1.5,sideGapMm:1,
+  toolStandOffMm:.2,frontGapMm:.8,mouthBlendMm:.6,backCornerMm:.4,entryChamferMm:.4,backingMm:.95} as const;

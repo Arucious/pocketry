@@ -9,6 +9,21 @@ import {BASE_HEIGHT,binFootprintMm} from "./standard";
 import {signedDistanceToFootprintRing,footprintOuterRingMm} from "./footprint";
 import type {BinSpec} from "./types";
 import {BACKED_LEAF as B,type WallSpring} from "./spring-schema";
+import {normalizeOutline} from "../geometry/outline";
+
+/** Local U/V release footprint: an open, flared mouth and rounded rear corners.
+ * The front clearance exposes the leaf even where its root is below the tool
+ * seat. The backing stop remains flat across the entire beam width. */
+export function springReleaseRing(widthMm:number,backStopMm:number,frontMm:number,segments=12):Ring {
+  const half=widthMm/2+B.sideGapMm,mouth=Math.min(B.mouthBlendMm,backStopMm*.45),rear=Math.min(B.backCornerMm,backStopMm*.3);
+  const ring:Ring=[{x:-half-mouth,y:frontMm},{x:half+mouth,y:frontMm},{x:half+mouth,y:0}];
+  const arc=(cx:number,cy:number,r:number,start:number,end:number)=>{for(let i=1;i<=segments;i++){const t=start+(end-start)*i/segments;ring.push({x:cx+r*Math.cos(t),y:cy+r*Math.sin(t)});}};
+  arc(half+mouth,mouth,mouth,-Math.PI/2,-Math.PI);
+  ring.push({x:half,y:backStopMm-rear});arc(half-rear,backStopMm-rear,rear,0,Math.PI/2);
+  ring.push({x:-half+rear,y:backStopMm});arc(-half+rear,backStopMm-rear,rear,Math.PI/2,Math.PI);
+  ring.push({x:-half,y:mouth});arc(-half-mouth,mouth,mouth,0,-Math.PI/2);
+  return normalizeOutline([{outer:ring,holes:[]}])[0].outer;
+}
 
 export function springRing(shape:TracedShape,spring:Pick<WallSpring,"shapeIndex"|"ringIndex">):Ring|undefined {
   const part=shape.outlineMm[spring.shapeIndex];return spring.ringIndex===-1?part?.outer:part?.holes[spring.ringIndex];
@@ -41,7 +56,7 @@ function profileFloor(spec:BinSpec,pocket:CutoutPlacement,shape:TracedShape,poin
   const maximum=Math.max(...profile.stations.map(s=>s.depthMm));
   return resolvePlacedPocketDepth(spec,{mode:"mm",value:maximum},shape,pocket).floorZ!+maximum-depth;
 }
-export interface SpringPlan {spring:WallSpring;pocketId:string;center:Point;tangent:Point;outward:Point;rootZ:number;topZ:number;contactZ:number;localFloorZ:number;backStopMm:number;clearanceMm:number;housing:Ring;point:(u:number,v:number)=>Point}
+export interface SpringPlan {spring:WallSpring;pocketId:string;center:Point;tangent:Point;outward:Point;rootZ:number;topZ:number;contactZ:number;localFloorZ:number;beamFrontMm:number;releaseFrontMm:number;backStopMm:number;surfaceZ:number;entryChamferMm:number;clearanceMm:number;housing:Ring;releaseOutline:Ring;point:(u:number,v:number)=>Point}
 export function planWallSpring(spec:BinSpec,pocket:CutoutPlacement,shape:TracedShape,spring:WallSpring):SpringPlan {
   if(hasPocketTilt(pocket)||pocket.profileBottom||Object.values(pocket.profileRotation??{}).some(x=>x!==0)||pocket.depth.mode==="through")throw new Error("Wall springs need an untilted blind pocket.");
   if(pocket.cornerRoundMm>0)throw new Error("Set pocket corner rounding to zero before anchoring springs to its traced wall.");
@@ -51,7 +66,12 @@ export function planWallSpring(spec:BinSpec,pocket:CutoutPlacement,shape:TracedS
   const tangent={x:(b.x-a.x)/length,y:(b.y-a.y)/length},sign=pocket.mirrored?-1:1,outward={x:tangent.y*sign,y:-tangent.x*sign};
   const anchor=transformPointPlacement(local,pocket),center={x:anchor.x+outward.x*pocket.clearanceMm,y:anchor.y+outward.y*pocket.clearanceMm};
   const point=(u:number,v:number)=>({x:center.x+tangent.x*u+outward.x*v,y:center.y+tangent.y*u+outward.y*v});
-  const rootZ=spring.rootFloorMm,topZ=rootZ+spring.heightMm,contactZ=topZ-B.contactDropMm,backStopMm=B.setbackMm+B.beamMm+spring.travelMm;
+  const rootZ=spring.rootFloorMm,topZ=rootZ+spring.heightMm,contactZ=topZ-B.contactDropMm;
+  // Locate the stem from the nominal tool side, not the clearance-expanded
+  // wall. With 0.6 mm pocket clearance the face stands 0.4 mm into the opening.
+  const beamFrontMm=B.toolStandOffMm-pocket.clearanceMm,backStopMm=beamFrontMm+B.beamMm+spring.travelMm;
+  const releaseFrontMm=Math.min(beamFrontMm-B.frontGapMm,-pocket.clearanceMm-spring.interferenceMm-.15);
+  const surfaceZ=infillTopZ(spec),entryChamferMm=Math.max(0,Math.min(B.entryChamferMm,surfaceZ-topZ-.1));
   const safeFloor=spec.flatBottom?1.2:BASE_HEIGHT;
   if(rootZ<safeFloor-1e-8)throw new Error(`Keep the spring root at or above Z ${safeFloor} mm to protect the base.`);
   if(topZ>infillTopZ(spec)-.2)throw new Error("Not enough filled wall height for this leaf and its backing stop. Reduce root elevation or use a taller filled bin.");
@@ -65,13 +85,15 @@ export function planWallSpring(spec:BinSpec,pocket:CutoutPlacement,shape:TracedS
     const p=point(u,0),d=boundaryDistance(outline,p)*(insideOutline(outline,p)?-1:1);
     if(Math.abs(d-pocket.clearanceMm)>.3)throw new Error("This wall bends too sharply across the spring width. Choose a smoother span or reduce width.");
   }
-  const housing=[point(-half,-.05),point(half,-.05),point(half,backStopMm+B.backingMm),point(-half,backStopMm+B.backingMm)];
+  const mouth=Math.min(B.mouthBlendMm,backStopMm*.45),extent=half+mouth+entryChamferMm;
+  const housing=[point(-extent,releaseFrontMm-entryChamferMm),point(extent,releaseFrontMm-entryChamferMm),point(extent,backStopMm+B.backingMm),point(-extent,backStopMm+B.backingMm)];
+  const releaseOutline=springReleaseRing(spring.widthMm,backStopMm,releaseFrontMm).map(p=>point(p.x,p.y));
   const boundary=spec.footprint.kind==="custom"?footprintOuterRingMm(spec):null;
   for(const p of housing) {
     const distance=boundary?signedDistanceToFootprintRing(p,boundary):Math.min(binFootprintMm(spec.gridX,spec.gridPitch)/2-Math.abs(p.x),binFootprintMm(spec.gridY,spec.gridPitch)/2-Math.abs(p.y));
     if(distance<.25)throw new Error("The spring needs more solid backing before the outside bin wall.");
   }
-  return{spring,pocketId:pocket.id,center,tangent,outward,rootZ,topZ,contactZ,localFloorZ,backStopMm,clearanceMm:pocket.clearanceMm,housing,point};
+  return{spring,pocketId:pocket.id,center,tangent,outward,rootZ,topZ,contactZ,localFloorZ,beamFrontMm,releaseFrontMm,backStopMm,surfaceZ,entryChamferMm,clearanceMm:pocket.clearanceMm,housing,releaseOutline,point};
 }
 function ringTouchesRing(a:Ring,b:Ring,allowance=0) {
   if(a.some(p=>pointInRing(b,p))||b.some(p=>pointInRing(a,p)))return true;

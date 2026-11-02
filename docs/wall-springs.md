@@ -3,7 +3,7 @@
 In Bin, select a pocket and open **Spring retainers → Add wall spring**. Click
 any regular contour span to position the anchor; the numeric source-contour
 distance provides the same control from the keyboard. Zoom to the spring to
-inspect the housing. Red circles mark finger-access exclusions. Apply commits
+inspect the housing. Red outlines mark finger-access exclusions. Apply commits
 one undoable edit; Cancel leaves the project untouched. Existing leaves can be
 edited or removed from the same section.
 
@@ -45,15 +45,24 @@ arrangement, rather than a port of the other project's Python/OpenSCAD code.
 Reference: [side-leaf observations and design dimensions](https://github.com/Arucious/gridfinity-bins/blob/d2f0baa1170cecec54ea9218bb2e284e47dea52b/docs/spring-fingers.md).
 The short unbacked end fingers broke in that project; they are not the preset.
 
-The beam starts 0.2 mm behind the clearance-adjusted wall. Its capsule reaches
+The beam starts 0.2 mm behind the **nominal tool side**. With 0.6 mm pocket
+clearance, this places the beam face 0.4 mm in front of the finished pocket
+wall. Its capsule reaches
 past the *nominal* tool outline by the requested overlap, compensating for the
 pocket's fit clearance. One-millimetre side gaps release the beam. A nearby
 solid wall through the entire leaf height limits outward motion. The backing
 gap is a geometric distance, not a force or calibrated maximum deflection.
+The back of the capsule is clipped flush with the beam so it cannot consume
+that rear travel. The release well has a flared mouth, rounded rear corners
+and a shallow entry bevel above the leaf top. At least 0.8 mm of front
+clearance exposes the leaf, replacing the former 0.25 mm gap behind a sharp
+rectangular opening. The same release outline is shown in the wall picker.
 
 The release slot can extend below the tool's seating floor. This allows a
 full-length leaf beside a shallow blade without deepening the blade seat or
-using a short stiff finger. `rootFloorMm` is absolute Z above the bin underside;
+using a short stiff finger. This includes localized edge relief beside the
+tool seat; it preserves the central seating floor but is not a claim that
+every point of the former pocket floor is unchanged. `rootFloorMm` is absolute Z above the bin underside;
 the default retains the whole 7 mm Gridfinity base. The default contact centre
 is Z 15.5 mm (1.5 mm below the leaf top), which must be above the local floor.
 The UI reports contact height above that floor; match it to the actual device.
@@ -64,7 +73,10 @@ objects, nonzero plan corner rounding, insufficient external-wall backing,
 overlapping housings and other pockets. Finger access is excluded using its
 entire opening, entry flare and a 0.25 mm margin, not just the anchor point.
 Native CAD additionally checks the actual backing and the floor attachment
-before adding a leaf. Preview, STL and 3MF use the same builder.
+after carving the release well, before adding a leaf. Tests also sever the
+root to confirm that the free beam is a separate component, which detects
+wall fusion that ordinary occupancy probes can miss. Preview, STL and 3MF use
+the same builder.
 
 The minimum 10 mm total leaf height preserves 8 mm above the root taper.
 It is not automatically shortened to fit an unsuitable pocket. These checks

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Expose spring leaves toward the pocket opening, retain their nominal contact position and full rear gap, and replace tight rectangular release slots with rounded, flared wells and entry bevels.
 - Bevel finger-access joining corners down to their ramp floors, with optional tangent blends into adjacent wall curves and matching UI/CLI controls.
 - Add optional wall-backed spring retainers with reinforced roots, released full-length beams, rounded contacts and protected-base/finger-access validation.
 - Place and preview wall springs on pocket contours in the UI, or edit saved projects with the `edit:features` CLI; preserve linked copies and portable undo.

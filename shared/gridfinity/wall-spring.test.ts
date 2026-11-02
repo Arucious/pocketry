@@ -1,5 +1,7 @@
 import {describe,it,expect} from "vitest";
-import {planWallSpring,wallSpringIssues,nearestSpringAnchor} from "./wall-spring";
+import {planWallSpring,wallSpringIssues,nearestSpringAnchor,springReleaseRing} from "./wall-spring";
+import {BACKED_LEAF as B} from "./spring-schema";
+import {signedArea} from "../geometry/rings";
 import {parseCutoutPlacement,fingerHoleSchema,transformPointPlacement} from "./cutout";
 import {parseProjectDoc,projectDocSchema,PROJECT_SCHEMA_VERSION} from "./project";
 import {applyLinkedEdits} from "./design-links";
@@ -19,6 +21,16 @@ describe("backed spring placement",()=>{
     expect(wallSpringIssues(springSpec,[{...springPocket,springs:[leaf]}],shapes,[hole]).issues[0].message).toMatch(/finger access/);
     const slot=fingerHoleSchema.parse({...hole,kind:"oblong-straight",lengthMm:30,center:{x:14,y:-14}});
     expect(wallSpringIssues(springSpec,[{...springPocket,springs:[leaf]}],shapes,[slot]).issues[0].message).toMatch(/finger access/);
+  });
+  it.each([0,.6,1])("locates the stem from the nominal tool, preserving rear travel with clearance %s",clearanceMm=>{
+    const plan=planWallSpring(springSpec,{...springPocket,clearanceMm},springShape,leaf);
+    expect(plan.beamFrontMm).toBeCloseTo(.2-clearanceMm);
+    expect(plan.beamFrontMm+clearanceMm).toBeCloseTo(.2);
+    expect(plan.backStopMm-plan.beamFrontMm-B.beamMm).toBeCloseTo(.4);
+    expect(plan.beamFrontMm-plan.releaseFrontMm).toBeGreaterThanOrEqual(.8-1e-8);
+    expect(plan.surfaceZ-plan.entryChamferMm).toBeGreaterThan(plan.topZ);
+    const ring=springReleaseRing(5,plan.backStopMm,plan.releaseFrontMm);
+    expect(signedArea(ring)).toBeGreaterThan(0);expect(ring.length).toBeGreaterThan(30);
   });
   it("blocks shallow contact, base cuts, insufficient backing, sharp corners, foreign pockets and duplicate housings",()=>{
     const plan=(p=springPocket,s=leaf,spec=springSpec)=>()=>planWallSpring(spec,p,springShape,s);
