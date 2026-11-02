@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {wallSpringSchema} from "./spring-schema";
 import { hasPocketTilt, pocketAxis, pocketMouthBasis, rotatePocketVector } from "./pocket-orientation";
 import { profileAlongX, profileBottomSchema, profileFloorSegments, profileFootprint, profilePrisms, hasProfileRotation } from "./profile-bottom";
 import { depthProfileSchema, maximumProfileDepth } from "./depth-profile";
@@ -620,6 +621,7 @@ const cutoutPlacementInputSchema = z
     split: pocketSplitSchema.optional(),
     depthProfile: depthProfileSchema.optional(),
     profileBottom: profileBottomSchema.optional(),
+    springs: z.array(wallSpringSchema).max(32).optional(),
     /** Free X/Y rotation of a profile object, independent of ordinary pocket tilt. */
     profileRotation: objectRotationSchema.pick({ xDeg: true, yDeg: true }).optional(),
     /** Signed per-edge fit adjustment after scaling: negative shrinks, positive grows. */
@@ -637,6 +639,7 @@ const cutoutPlacementInputSchema = z
   })
   .strict()
   .superRefine((pocket, context) => {
+    if (new Set(pocket.springs?.map(s => s.id)).size !== (pocket.springs?.length ?? 0)) context.addIssue({code:z.ZodIssueCode.custom,path:["springs"],message:"Spring ids must be unique within a pocket."});
     if (pocket.depthProfile && (pocket.split || pocket.profileBottom)) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["depthProfile"], message: "Choose either depth stations, a two-section split, or a side-profile pocket." });
     }

@@ -28,6 +28,7 @@ export { infillHeightMm } from "@shared/gridfinity/fill";
 import type { Kernel } from "@/lib/manifold/runtime";
 
 import { buildBase } from "./base";
+import {applyWallSprings} from "./wall-springs";
 import {
   buildCutoutCutters,
   buildFingerHoleCutters,
@@ -261,6 +262,7 @@ export function buildBinWithCutouts(
       solid = arena.track(base.solid.subtract(cutter));
     }
   }
+  if(layout?.cutouts.some(c=>c.springs?.length)) solid=applyWallSprings(kernel,solid,spec,layout,quality.circularSegments);
   const status = solid.status();
   if (status !== "NoError") {
     throw new Error(`buildBinWithCutouts: manifold reported ${status}`);

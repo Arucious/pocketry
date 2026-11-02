@@ -1,4 +1,5 @@
 import { hasPocketTilt, pocketAxis } from "./pocket-orientation";
+import {wallSpringIssues} from "./wall-spring";
 import { hasRigidPocket } from "./rigid-pocket";
 import { depthProfileError } from "./depth-profile";
 import { resolveFingerAccessDepth } from "./finger-access-depth";
@@ -311,6 +312,7 @@ export function validateLayout(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   if (cutouts.length === 0 && fingerHoles.length === 0) return issues;
+  issues.push(...wallSpringIssues(spec,cutouts,shapesById,fingerHoles).issues);
 
   if (spec.fill !== "solid") {
     issues.push({

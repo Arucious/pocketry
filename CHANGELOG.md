@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add optional wall-backed spring retainers with reinforced roots, released full-length beams, rounded contacts and protected-base/finger-access validation.
 - Keep ramp-following finger access on its owner's sweep where possible, avoiding nearly coincident floor slivers in mirrored inclined pockets.
 - Refine selected contour spans in Trace and Bin with bounded smoothing, circle/ellipse fitting, enlarge-only previews and undo.
 - Reproduce local curve edits through the `refine:curve` CLI with JSON operations, read-only planning, linked-copy propagation and portable undo history.
