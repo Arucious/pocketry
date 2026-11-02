@@ -1,0 +1,133 @@
+{
+  "name": "Combined scissors 07 · backed springs",
+  "operation": {
+    "pockets": [
+      {
+        "id": "scissors-2",
+        "springs": [
+          {
+            "id": "small-blade-side-1",
+            "shapeIndex": 0,
+            "ringIndex": -1,
+            "atMm": 232.5064482846905,
+            "widthMm": 5,
+            "heightMm": 10,
+            "rootFloorMm": 7,
+            "travelMm": 0.4,
+            "interferenceMm": 0.1
+          },
+          {
+            "id": "small-blade-side-2",
+            "shapeIndex": 0,
+            "ringIndex": -1,
+            "atMm": 150.3452302817173,
+            "widthMm": 5,
+            "heightMm": 10,
+            "rootFloorMm": 7,
+            "travelMm": 0.4,
+            "interferenceMm": 0.1
+          }
+        ]
+      }
+    ],
+    "fingerAccess": [
+      {
+        "id": "access-1",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      },
+      {
+        "id": "access-2",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      },
+      {
+        "id": "access-3",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      },
+      {
+        "id": "access-4",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      }
+    ]
+  },
+  "verification": {
+    "connectedSolid": true,
+    "watertightSerializedStl": true,
+    "consistentWinding": true,
+    "triangles": 47864,
+    "volumeCm3": 273.3415447030657,
+    "dimensionsMm": [
+      251.5,
+      83.5,
+      24.551471710205078
+    ],
+    "protectedBaseRemovedMm3": 1.0317234980403224e-8,
+    "stackingLipRemovedMm3": 1.2290964489509562e-7,
+    "springProbes": 32,
+    "floorProbes": 12,
+    "springs": [
+      {
+        "id": "small-blade-side-1",
+        "anchor": {
+          "x": -7.36254048301702,
+          "y": -34.40785413359054
+        },
+        "rootZ": 7,
+        "topZ": 17,
+        "contactZ": 15.5,
+        "aboveToolFloorMm": 1.990000000000002,
+        "backingGapMm": 0.4,
+        "releaseProxyTipMm": 0.3,
+        "releaseProxyCollisionMm3": -7.089665768518494e-19
+      },
+      {
+        "id": "small-blade-side-2",
+        "anchor": {
+          "x": -9.82640337428507,
+          "y": -22.837847913181204
+        },
+        "rootZ": 7,
+        "topZ": 17,
+        "contactZ": 15.5,
+        "aboveToolFloorMm": 1.990000000000002,
+        "backingGapMm": 0.4,
+        "releaseProxyTipMm": 0.3,
+        "releaseProxyCollisionMm3": 4.489274620447792e-20
+      }
+    ],
+    "stlSha256": "579748c1359aa194073d5a1106ff5a4982f07ccafde31a45fdd150de4970cb1e",
+    "threeMfSha256": "85b77de14a2843288967530efee11c071ecec4eb6430e90e4754796f1c3e5b2e"
+  },
+  "issues": [
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Large scissors” and “Large handle bridge full-height rounding” overlap. Their cuts will be combined.",
+      "cutoutIds": [
+        "scissors-1",
+        "scissors-1-bridge-full-height-relief-04"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Small scissors” and “Small handle bridge full-height rounding” overlap. Their cuts will be combined.",
+      "cutoutIds": [
+        "scissors-2",
+        "scissors-2-bridge-full-height-relief-04"
+      ]
+    }
+  ],
+  "notes": [
+    "One complete bin for both opposing scissors.",
+    "Large pocket, clearances and both seating profiles are unchanged from revision 06.",
+    "Two opposing rounded contacts on the small blade: each overlaps the nominal outline by 0.10 mm; force and physical contact height remain unverified.",
+    "Release slots run to Z7 below the shallow tool floor; the complete protected base is retained. They remain open to the deck, preventing a thin roof from fusing the tip.",
+    "The old eight planar triangular cutters are replaced by generated 1.2 mm joining chamfers with 0.5 mm tangent runouts. Full-height bridge rounding remains.",
+    "The 0.3 mm outward warp is a geometric proxy, not a force or endurance simulation.",
+    "These STL/3MF files contain complete model geometry, not a sliced print job."
+  ]
+}
