@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Refine selected contour spans in Trace and Bin with bounded smoothing, circle/ellipse fitting, enlarge-only previews and undo.
+- Reproduce local curve edits through the `refine:curve` CLI with JSON operations, read-only planning, linked-copy propagation and portable undo history.
 
 - Add an opt-in refined side-entry magnet preset and notched stacking lip, editable fit/removal settings, protected base/roof validation, and matching CLI/MCP options.
 
