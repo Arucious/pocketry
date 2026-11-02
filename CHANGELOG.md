@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Bevel finger-access joining corners down to their ramp floors, with optional tangent blends into adjacent wall curves and matching UI/CLI controls.
 - Add optional wall-backed spring retainers with reinforced roots, released full-length beams, rounded contacts and protected-base/finger-access validation.
 - Place and preview wall springs on pocket contours in the UI, or edit saved projects with the `edit:features` CLI; preserve linked copies and portable undo.
 - Keep ramp-following finger access on its owner's sweep where possible, avoiding nearly coincident floor slivers in mirrored inclined pockets.

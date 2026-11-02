@@ -91,7 +91,7 @@ export function wallSpringIssues(spec:BinSpec,pockets:readonly CutoutPlacement[]
     for(const hole of holes) {
       const opening=fingerHoleFootprintRing(hole,
         {position:{x:0,y:0},rotationDeg:0,mirrored:false},128);
-      if(ringTouchesRing(plan.housing,opening,.25+Math.max(hole.topChamferMm??0,hole.topFilletMm)))throw new Error("Move the spring away from finger access; the opening removes its release space or backing.");
+      if(ringTouchesRing(plan.housing,opening,.25+Math.max(hole.topChamferMm??0,hole.topFilletMm,(hole.joiningChamferMm??0)+(hole.joiningBlendMm??0))))throw new Error("Move the spring away from finger access; the opening removes its release space or backing.");
     }
     for(const other of pockets)if(other.id!==pocket.id) {
       const s=shapes.get(other.shapeId);if(!s)continue;

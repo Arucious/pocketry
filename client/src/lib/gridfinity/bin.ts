@@ -29,6 +29,7 @@ import type { Kernel } from "@/lib/manifold/runtime";
 
 import { buildBase } from "./base";
 import {applyWallSprings} from "./wall-springs";
+import {buildFingerJoiningCutters} from "./finger-joining";
 import {
   buildCutoutCutters,
   buildFingerHoleCutters,
@@ -253,6 +254,7 @@ export function buildBinWithCutouts(
     const allCutters = [
       ...builtCutouts.cutters,
       ...buildFingerHoleCutters(kernel, layout.fingerHoles, spec, quality, layout),
+      ...(layout.fingerHoles.some(h=>(h.joiningChamferMm??0)>0)?buildFingerJoiningCutters(kernel,layout.fingerHoles,spec,quality,layout):[]),
     ];
     if (allCutters.length > 0) {
       const cutter =
@@ -263,6 +265,14 @@ export function buildBinWithCutouts(
     }
   }
   if(layout?.cutouts.some(c=>c.springs?.length)) solid=applyWallSprings(kernel,solid,spec,layout,quality.circularSegments);
+  if(layout&&(layout.cutouts.some(c=>c.springs?.length)||layout.fingerHoles.some(h=>(h.joiningChamferMm??0)>0))) {
+    // Overlapping floor-following feature cutters can leave redundant native
+    // edges that collapse onto the same Float32 coordinate during export.
+    // Resolve these before material partitioning, without rebuilding the mesh.
+    const cleaned=arena.track(solid.simplify(.000001));
+    if(cleaned.status()!=="NoError"||Math.abs(cleaned.volume()-solid.volume())>.001)throw new Error("Pocket feature boundary cleanup changed too much material.");
+    solid=cleaned;
+  }
   const status = solid.status();
   if (status !== "NoError") {
     throw new Error(`buildBinWithCutouts: manifold reported ${status}`);

@@ -164,6 +164,7 @@ import { cn } from "@/lib/utils";
 import { PocketSplitControls } from "./pocket-split-controls";
 import { PocketDepthProfileControls } from "./pocket-depth-profile-controls";
 import {PocketSpringControls} from "./pocket-spring-controls";
+import {FingerJoiningControls} from "./finger-joining-controls";
 import { changeBinGridPitchPreservingSize } from "@shared/gridfinity/grid-pitch";
 import { PocketDepthSummary, PocketInsertionControls, PocketMeasurements, PocketSizeInputs, PositionInputs } from "./pocket-measurements";
 import { ExportConfirmationDialog, ProjectBackupOption } from "./export-confirmation-dialog";
@@ -1214,6 +1215,7 @@ export function BinControlsPanel({
                     historyLabel: "Chamfer finger access" })}
                   hint="A continuous 45° bevel around the opening. Replaces top-edge rounding."
                 />
+                <FingerJoiningControls hole={selectedFingerHole} />
                 <MmSlider
                   label="Top edge round"
                   value={effectiveFingerHoleTopFilletMm(selectedFingerHole)}

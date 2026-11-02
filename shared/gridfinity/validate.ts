@@ -1,5 +1,6 @@
 import { hasPocketTilt, pocketAxis } from "./pocket-orientation";
 import {wallSpringIssues} from "./wall-spring";
+import {fingerJoiningOwner} from "./finger-joining";
 import { hasRigidPocket } from "./rigid-pocket";
 import { depthProfileError } from "./depth-profile";
 import { resolveFingerAccessDepth } from "./finger-access-depth";
@@ -21,6 +22,7 @@ import {
 } from "./footprint";
 import {
   effectiveFingerHoleDepthMm,
+  hasFlatFingerHoleBottom,
   defaultPocketFloorThicknessMm,
   fingerHoleFootprintRing,
   placementFootprint,
@@ -594,13 +596,14 @@ function validateFingerHoleAgainstBin(
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const label = `Finger access ${index + 1}`;
+  if((hole.joiningChamferMm??0)>0&&(!hasFlatFingerHoleBottom(hole)||!fingerJoiningOwner(hole,cutouts,shapesById)))issues.push({code:"invalid-finger-joining",severity:"error",fingerHoleIds:[hole.id],message:`${label}: joining relief needs flat-bottom access next to an untilted blind pocket.`});
   const ring = fingerHoleFootprintRing(
     hole,
     { position: { x: 0, y: 0 }, rotationDeg: 0, mirrored: false },
   );
   const bounds = ringBounds(ring);
   if (!bounds) return issues;
-  const topAllowanceMm = Math.max(hole.topFilletMm, hole.topChamferMm ?? 0);
+  const topAllowanceMm = Math.max(hole.topFilletMm, hole.topChamferMm ?? 0,(hole.joiningChamferMm??0)+(hole.joiningBlendMm??0));
 
   const halfW = binFootprintMm(spec.gridX, spec.gridPitch) / 2;
   const halfL = binFootprintMm(spec.gridY, spec.gridPitch) / 2;

@@ -190,6 +190,10 @@ export const fingerHoleSchema = z
     topFilletMm: z.number().min(0).max(5).default(0),
     /** Optional 45-degree entry bevel, replacing the top round when nonzero. */
     topChamferMm: z.number().finite().min(0).max(5).optional(),
+    /** Full-height bevel at material cusps joining this access to a pocket. */
+    joiningChamferMm: z.number().finite().min(0).max(5).optional(),
+    /** Tangent runout at both ends of the joining bevel; zero keeps it planar. */
+    joiningBlendMm: z.number().finite().min(0).max(3).optional(),
     /** Extend the access floor along the nearest profiled pocket when it is deeper. */
     depthMode: z.enum(["fixed", "nearest-profile"]).optional(),
     /** Used by flat bottoms; retained while a curved bottom is selected. */
@@ -209,6 +213,7 @@ export const fingerHoleSchema = z
   })
   .strict()
   .superRefine((hole, context) => {
+    if((hole.joiningBlendMm??0)>0&&(hole.joiningChamferMm??0)<=0)context.addIssue({code:z.ZodIssueCode.custom,path:["joiningBlendMm"],message:"A joining blend needs a positive joining chamfer."});
     if (["oblong-deep-scoop", "flat-ended-scoop", "oblong-straight", "flat-ended-straight"].includes(hole.kind) &&
         hole.diameterMm > MAX_FINGER_SLOT_WIDTH_MM) {
       context.addIssue({ code: z.ZodIssueCode.too_big, type: "number", maximum: MAX_FINGER_SLOT_WIDTH_MM,

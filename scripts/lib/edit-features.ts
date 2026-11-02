@@ -3,6 +3,7 @@ import {projectFeatureEditsSchema} from "../../shared/gridfinity/feature-edits";
 export const EDIT_FEATURES_USAGE=`Usage: npm run edit:features -- --project FILE --operation JSON_FILE --out NEW_PROJECT_FILE
 Use --plan instead of --out to print the edited project without writing it.
 Operation: {"pockets":[{"id":"pocket-id","springs":[{"id":"spring-id","atMm":40}]}]}
+Joining relief: {"fingerAccess":[{"id":"access-id","joiningChamferMm":1.2,"joiningBlendMm":0.5}]}
 Spring lists replace existing retainers. An empty list removes all springs.
 Contour distance is source millimetres; other dimensions are physical millimetres.
 Existing inputs and outputs are never overwritten.`;
