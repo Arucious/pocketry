@@ -52,7 +52,17 @@ export function resolveFingerAccessDepth(spec: BinSpec, hole: FingerHole,
   const minimumDepthMm = Math.max(fixedDepthMm, Math.min(...depths) + shift);
   const maximumDepthMm = Math.max(fixedDepthMm, Math.max(...depths) + shift);
   // Expand the swept mask far enough to cover the complete access opening.
-  const paddingMm = Math.max(20, reach / Math.min(cutout.scaleX, cutout.scaleY) + nearest.distance + 10);
+  const otherBounds = profileAxisBounds(shape.outlineMm, profile.axis === "x" ? "y" : "x");
+  const otherAxis = profile.axis === "x" ? "y" : "x";
+  const localMouth = mouth.map(p => untransformPointPlacement(p, cutout));
+  const extension = Math.max(0, ...localMouth.flatMap(p => [
+    bounds.min - p[profile.axis], p[profile.axis] - bounds.max,
+    otherBounds.min - p[otherAxis], p[otherAxis] - otherBounds.max,
+  ]));
+  // Reuse the ordinary owner's mask dimensions whenever they cover the access.
+  // Unnecessarily different sweep widths produce near-coplanar floor slivers
+  // when an inclined access cutter is unioned with its owner's cutter.
+  const paddingMm = Math.max(20, (extension + 1) * Math.min(cutout.scaleX, cutout.scaleY));
   return { minimumDepthMm, maximumDepthMm, floorZ: surface.infillTopZ - maximumDepthMm,
     match: { cutout, shape, profileTopZ, paddingMm }, error: null };
 }

@@ -52,6 +52,22 @@ describe("ramp-following finger access", () => {
     const shifted = resolveFingerAccessDepth(spec, h, [{ ...c, elevationMm: undefined, zOffsetMm: -1 }], layout.shapesById);
     expect(shifted.maximumDepthMm).toBeGreaterThan(8);
   });
+  it("uses the owner's ordinary mask when it already covers the access", () => {
+    const c = { ...pocket, mirrored: true, rotationDeg: -75.75 };
+    const h = { ...hole, center: transformPointPlacement({ x: 0, y: 4 }, c), diameterMm: 32 };
+    expect(resolveFingerAccessDepth(spec, h, [c], layout.shapesById).match?.paddingMm).toBe(20);
+  });
+  it.each([[.4, 1.7], [1.8, .3], [1, 1]])("extends a scaled mask far enough for a distant large access (%j)", (scaleX, scaleY) => {
+    const c = { ...pocket, scaleX, scaleY, mirrored: true, rotationDeg: 37 };
+    const center = transformPointPlacement({ x: 0, y: 8 }, c);
+    const h = { ...hole, center, diameterMm: 110 };
+    const result = resolveFingerAccessDepth(spec, h, [c], layout.shapesById);
+    expect(result.error).toBeNull();
+    const pad = result.match!.paddingMm / Math.min(scaleX, scaleY);
+    // A world-space circle maps to an axis-aligned ellipse in the source frame.
+    expect(30 + pad).toBeGreaterThan(55 / scaleX);
+    expect(5 + pad).toBeGreaterThan(8 + 55 / scaleY);
+  });
   it("keeps requested depth when it is deeper and selects the closest of two profiles", () => {
     const other = { ...pocket, id: "other", position: { x: 0, y: 40 } };
     const result = resolveFingerAccessDepth(spec, { ...hole, depthMm: 15 }, [other, pocket], layout.shapesById);
