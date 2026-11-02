@@ -43,6 +43,7 @@ import { ContourMagnifier } from "@/components/canvas/contour-magnifier";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CanvasToolbar } from "@/components/layout/canvas-toolbar";
 import { ContourEditTools } from "@/components/canvas/contour-edit-tools";
+import { LocalCurveTool } from "@/components/canvas/local-curve-tool";
 import { EditHistoryMenu } from "@/components/history/edit-history-menu";
 import { useViewportTransform } from "@/hooks/use-viewport-transform";
 import { canHandleCanvasShortcut } from "@/lib/canvas-keyboard";
@@ -918,6 +919,8 @@ function TraceStage({ onReprocess, emptyState }: TraceCanvasProps): JSX.Element 
           {mobileEditing && <div className="absolute left-2 bottom-16 z-30">
             <MobileContourTools selected={!!mobileEditor.selectedPoint} canRemove={mobileEditor.canRemove} onRemove={mobileEditor.removeSelected}
               onDone={() => dispatch({ type: "SET_MODE", mode: "navigate" })} />
+            {selection&&<LocalCurveTool outline={outline} initialRing={selection} mmPerUnit={measurementMmPerPx??undefined}
+              onApply={outline=>dispatch({type:"OUTLINE_COMMITTED",outline,label:"Refine local curve"})} />}
           </div>}
           <ContourMagnifier sceneId={sceneId} canvasWidth={containerSize.width} canvasHeight={containerSize.height} compact={isMobile}
             point={magnifiedPoint ? {
@@ -958,11 +961,13 @@ function TraceStage({ onReprocess, emptyState }: TraceCanvasProps): JSX.Element 
           </CanvasToolbar>
 
           {(mode === "edit" || mode === "remove") && selection && getRing(outline, selection) && (
-            <div className="absolute bottom-16 left-2 z-30 max-md:hidden">
+            <div className="absolute bottom-16 left-2 z-30 hidden items-center gap-2 md:flex">
               <ContourEditTools removeActive={mode === "remove"}
                 onDeletePoint={desktopPoint.selectedPoint ? deleteFocusedPoint : undefined} canDeletePoint={desktopPoint.canDelete}
                 selectionLabel={`Contour ${selection.shapeIndex + 1}${selection.ringIndex === OUTER_RING ? "" : ` · Hole ${selection.ringIndex + 1}`}`}
                 onChange={(remove) => dispatch({ type: "SET_MODE", mode: remove ? "remove" : "edit" })} />
+              <LocalCurveTool outline={outline} initialRing={selection} mmPerUnit={measurementMmPerPx??undefined}
+                onApply={outline=>dispatch({type:"OUTLINE_COMMITTED",outline,label:"Refine local curve"})} />
             </div>
           )}
 

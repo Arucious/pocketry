@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refine selected contour spans in Trace and Bin with bounded smoothing, circle/ellipse fitting, enlarge-only previews and undo.
+
 - Add an opt-in refined side-entry magnet preset and notched stacking lip, editable fit/removal settings, protected base/roof validation, and matching CLI/MCP options.
 
 - Match finger-access floors to nearby depth ramps, bevel their openings, and block cuts into the protected base; support the same settings in CLI and MCP exports.

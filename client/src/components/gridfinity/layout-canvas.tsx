@@ -83,6 +83,7 @@ import {
 } from "@/components/canvas/canvas-viewport";
 import { Button } from "@/components/ui/button";
 import { ContourEditTools } from "@/components/canvas/contour-edit-tools";
+import { LocalCurveTool } from "@/components/canvas/local-curve-tool";
 import { MobileContourTools } from "@/components/canvas/mobile-contour-tools";
 import { ContourMagnifier } from "@/components/canvas/contour-magnifier";
 import { useMobileContourEditor } from "@/hooks/use-mobile-contour-editor";
@@ -2220,10 +2221,19 @@ function LayoutStage({ onEditPocket, onSelectSurfaceText, edgeBandColor, textPos
 
       {editorMode === "contour" && selected && !panActive ? (
         <div className="bin-canvas-guidance absolute bottom-2 left-2 z-30">
+          <div className="flex flex-wrap items-center gap-2">
           {isMobile ? <MobileContourTools selected={!!mobileEditor.selectedPoint} canRemove={mobileEditor.canRemove} onRemove={mobileEditor.removeSelected}
             onDone={() => dispatch({ type: "SET_EDITOR_MODE", editorMode: "placement" })} /> :
             <ContourEditTools removeActive={removeVertices} onChange={setRemoveVertices}
               onDeletePoint={desktopPoint.selectedPoint ? deleteFocusedPoint : undefined} canDeletePoint={desktopPoint.canDelete} />}
+          <LocalCurveTool key={selected.shape.id} outline={selected.shape.outlineMm} mmPerUnit={1} yUp enlargeOnlyDefault
+            initialRing={desktopPoint.selectedPoint?.ref}
+            validate={outline=>{
+              const byId=new Map(shapesById);byId.set(selected.shape.id,{...selected.shape,outlineMm:outline});
+              return validateLayout(spec,cutouts,byId,fingerHoles).find(issue=>issue.severity==="error")?.message??null;
+            }}
+            onApply={outline=>commitContour(selected.cutout.id,selected.shape,outline,"Refine local curve")} />
+          </div>
           <WorkflowHint hintKey="contour-edit" className="mt-1 max-w-[min(22rem,calc(100vw-1rem))]">
             {isMobile ? "Drag points to move. Tap the line to add; tap a point for Delete. Pinch to zoom."
               : removeVertices ? "Tap a vertex to remove it · Undo restores it" : "Drag points to move · Click near an edge to add · Select a point for Delete"}
