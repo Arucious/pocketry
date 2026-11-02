@@ -1,0 +1,53 @@
+{
+  "pockets": [
+    {
+      "id": "scissors-2",
+      "springs": [
+        {
+          "id": "small-blade-side-1",
+          "shapeIndex": 0,
+          "ringIndex": -1,
+          "atMm": 232.5064482846905,
+          "widthMm": 5,
+          "heightMm": 10,
+          "rootFloorMm": 7,
+          "travelMm": 0.4,
+          "interferenceMm": 0.1
+        },
+        {
+          "id": "small-blade-side-2",
+          "shapeIndex": 0,
+          "ringIndex": -1,
+          "atMm": 150.3452302817173,
+          "widthMm": 5,
+          "heightMm": 10,
+          "rootFloorMm": 7,
+          "travelMm": 0.4,
+          "interferenceMm": 0.1
+        }
+      ]
+    }
+  ],
+  "fingerAccess": [
+    {
+      "id": "access-1",
+      "joiningChamferMm": 1.2,
+      "joiningBlendMm": 0.5
+    },
+    {
+      "id": "access-2",
+      "joiningChamferMm": 1.2,
+      "joiningBlendMm": 0.5
+    },
+    {
+      "id": "access-3",
+      "joiningChamferMm": 1.2,
+      "joiningBlendMm": 0.5
+    },
+    {
+      "id": "access-4",
+      "joiningChamferMm": 1.2,
+      "joiningBlendMm": 0.5
+    }
+  ]
+}

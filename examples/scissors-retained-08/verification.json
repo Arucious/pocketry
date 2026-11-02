@@ -1,0 +1,141 @@
+{
+  "name": "Combined scissors 08 · backed springs",
+  "operation": {
+    "pockets": [
+      {
+        "id": "scissors-2",
+        "springs": [
+          {
+            "id": "small-blade-side-1",
+            "shapeIndex": 0,
+            "ringIndex": -1,
+            "atMm": 232.5064482846905,
+            "widthMm": 5,
+            "heightMm": 10,
+            "rootFloorMm": 7,
+            "travelMm": 0.4,
+            "interferenceMm": 0.1
+          },
+          {
+            "id": "small-blade-side-2",
+            "shapeIndex": 0,
+            "ringIndex": -1,
+            "atMm": 150.3452302817173,
+            "widthMm": 5,
+            "heightMm": 10,
+            "rootFloorMm": 7,
+            "travelMm": 0.4,
+            "interferenceMm": 0.1
+          }
+        ]
+      }
+    ],
+    "fingerAccess": [
+      {
+        "id": "access-1",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      },
+      {
+        "id": "access-2",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      },
+      {
+        "id": "access-3",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      },
+      {
+        "id": "access-4",
+        "joiningChamferMm": 1.2,
+        "joiningBlendMm": 0.5
+      }
+    ]
+  },
+  "verification": {
+    "connectedSolid": true,
+    "rootSeveredComponents": 3,
+    "watertightSerializedStl": true,
+    "consistentWinding": true,
+    "triangles": 47852,
+    "volumeCm3": 273.30238726400245,
+    "dimensionsMm": [
+      251.5,
+      83.5,
+      24.551471710205078
+    ],
+    "protectedBaseRemovedMm3": 1.0317234980403224e-8,
+    "stackingLipRemovedMm3": 1.2290964489509562e-7,
+    "springProbes": 34,
+    "floorProbes": 12,
+    "springs": [
+      {
+        "id": "small-blade-side-1",
+        "anchor": {
+          "x": -7.36254048301702,
+          "y": -34.40785413359054
+        },
+        "rootZ": 7,
+        "topZ": 17,
+        "contactZ": 15.5,
+        "aboveToolFloorMm": 1.990000000000002,
+        "stemIntoOpeningMm": 0.39999999999999997,
+        "frontReleaseGapMm": 0.8,
+        "backingGapMm": 0.4,
+        "entryBevelMm": 0.4,
+        "releaseProxyTipMm": 0.3,
+        "releaseProxyCollisionMm3": 2.3653395052076337e-19
+      },
+      {
+        "id": "small-blade-side-2",
+        "anchor": {
+          "x": -9.82640337428507,
+          "y": -22.837847913181204
+        },
+        "rootZ": 7,
+        "topZ": 17,
+        "contactZ": 15.5,
+        "aboveToolFloorMm": 1.990000000000002,
+        "stemIntoOpeningMm": 0.39999999999999997,
+        "frontReleaseGapMm": 0.8,
+        "backingGapMm": 0.4,
+        "entryBevelMm": 0.4,
+        "releaseProxyTipMm": 0.3,
+        "releaseProxyCollisionMm3": 7.752648961528214e-19
+      }
+    ],
+    "stlSha256": "8b2c51e4360cf72482d576dd7d796b27450ee0a4eb6d4eccc6a0b8b9dbe90cd7",
+    "threeMfSha256": "ed8905d10aa07623bb16735d10490278f06cb0e56f6e8c64193c8251d3dafb1f"
+  },
+  "issues": [
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Large scissors” and “Large handle bridge full-height rounding” overlap. Their cuts will be combined.",
+      "cutoutIds": [
+        "scissors-1",
+        "scissors-1-bridge-full-height-relief-04"
+      ]
+    },
+    {
+      "code": "cutout-overlap",
+      "severity": "warning",
+      "message": "“Small scissors” and “Small handle bridge full-height rounding” overlap. Their cuts will be combined.",
+      "cutoutIds": [
+        "scissors-2",
+        "scissors-2-bridge-full-height-relief-04"
+      ]
+    }
+  ],
+  "notes": [
+    "One complete bin for both opposing scissors.",
+    "Clearance, central seating profiles, spring anchors, root heights and contact positions are unchanged.",
+    "The stems now stand 0.4 mm into the finished pocket, with 0.8 mm front release gaps and rounded flared release wells. Local edge relief exposes the lower leaf without changing the central blade floor.",
+    "Nose rears are clipped flush to the beam so the 0.4 mm rear deflection gap remains unobstructed. The backing remains full-height and the well mouths have shallow entry bevels.",
+    "Two opposing rounded contacts retain the nominal 0.10 mm overlap; physical force and contact height remain unverified.",
+    "The complete protected base and whole stacking lip are retained.",
+    "The 0.3 mm outward warp is a geometric proxy, not a force or endurance simulation.",
+    "These STL/3MF files contain complete model geometry, not a sliced print job."
+  ]
+}
