@@ -163,6 +163,7 @@ import { SURFACE_FIT_CHECK_OUTLINE_WIDTH_MM, surfaceFitCheckStyleSchema, type Su
 import { cn } from "@/lib/utils";
 import { PocketSplitControls } from "./pocket-split-controls";
 import { PocketDepthProfileControls } from "./pocket-depth-profile-controls";
+import {PocketSpringControls} from "./pocket-spring-controls";
 import { changeBinGridPitchPreservingSize } from "@shared/gridfinity/grid-pitch";
 import { PocketDepthSummary, PocketInsertionControls, PocketMeasurements, PocketSizeInputs, PositionInputs } from "./pocket-measurements";
 import { ExportConfirmationDialog, ProjectBackupOption } from "./export-confirmation-dialog";
@@ -950,6 +951,7 @@ export function BinControlsPanel({
                 </section>
               </PocketDepthSummary>}
               {!selectedCutout.profileBottom && <PocketDepthProfileControls key={selectedCutout.id} cutout={selectedCutout} shape={selectedShape} />}
+              <PocketSpringControls key={`springs-${selectedCutout.id}`} cutout={selectedCutout} shape={selectedShape} shapes={shapes} />
               {selectedCutout.depthProfile && <PocketDepthSummary cutout={selectedCutout} shape={selectedShape} section={section} inspect={inspectPocket} />}
               {!selectedCutout.profileBottom && <PocketSplitControls cutout={selectedCutout} />}
               <details className="group/size border-t pt-1 text-xs" aria-label="Pocket size and scale" data-testid="pocket-size-settings">

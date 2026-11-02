@@ -15,6 +15,7 @@
     "generate:reference-strip": "tsx scripts/generate-reference-strip.ts",
     "export:bin": "tsx scripts/export-bin.ts",
     "refine:curve": "tsx scripts/refine-curve.ts",
+    "edit:features": "tsx scripts/edit-features.ts",
     "mcp": "tsx scripts/mcp.ts",
     "db:push": "drizzle-kit push"
   },

@@ -1,5 +1,29 @@
 # Backed wall springs
 
+In Bin, select a pocket and open **Spring retainers → Add wall spring**. Click
+any regular contour span to position the anchor; the numeric source-contour
+distance provides the same control from the keyboard. Zoom to the spring to
+inspect the housing. Red circles mark finger-access exclusions. Apply commits
+one undoable edit; Cancel leaves the project untouched. Existing leaves can be
+edited or removed from the same section.
+
+For the CLI, write an operation JSON file containing complete spring lists:
+
+```json
+{"pockets":[{"id":"scissors-2","springs":[{"id":"blade-retainer","atMm":240}]}]}
+```
+
+```sh
+npm run edit:features -- --project bin.pocketry.json --operation springs.json --plan
+npm run edit:features -- --project bin.pocketry.json --operation springs.json --out retained.pocketry.json
+npm run export:bin -- --project retained.pocketry.json --out exports/retained
+```
+
+`--plan` prints the resulting project and validation issues without creating
+files. Output creation is exclusive: existing files and the input cannot be
+overwritten. An empty spring list removes the pocket's retainers. The saved
+project can then be exported normally or opened in the UI.
+
 Optional retainers belong to a pocket's `springs` list. Each anchor names a
 shape, outer/hole ring and arc distance from its first vertex. Distances along
 the source ring are measured before scaling; width, height, backing gap and
